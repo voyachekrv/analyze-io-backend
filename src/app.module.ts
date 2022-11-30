@@ -1,10 +1,20 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { KnexModule } from 'nestjs-knex';
+import { postgressConnection } from './db/postgres.connection';
+import { UserModule } from './user/user.module';
 
 @Module({
-	imports: [],
-	controllers: [AppController],
-	providers: [AppService]
+	imports: [
+		ConfigModule.forRoot({
+			envFilePath: '.env'
+		}),
+		KnexModule.forRootAsync({
+			imports: [ConfigModule],
+			inject: [ConfigService],
+			useFactory: postgressConnection
+		}),
+		UserModule
+	]
 })
 export class AppModule {}
