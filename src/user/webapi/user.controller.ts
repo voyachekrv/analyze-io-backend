@@ -15,10 +15,21 @@ import { UserRoles } from '../entities/user.entity';
 import { RolesGuard } from '../guards/roles.guard';
 import { UserService } from '../services/user.service';
 
+/**
+ * Контроллер для работы с пользователями
+ */
 @Controller('user')
 export class UserController {
+	/**
+	 * Контроллер для работы с пользователями
+	 * @param userService Сервис для работы с пользователями
+	 */
 	constructor(private readonly userService: UserService) {}
 
+	/**
+	 * Получение всех пользователей
+	 * @returns Список пользователей
+	 */
 	@Get()
 	@UseGuards(RolesGuard)
 	@Roles(UserRoles.USER, UserRoles.ROOT)
@@ -26,6 +37,11 @@ export class UserController {
 		return await this.userService.findAll();
 	}
 
+	/**
+	 * Создание суперпользователя (только для других суперпользователей)
+	 * @param dto DTO создания пользователя
+	 * @returns ID созданной сущности
+	 */
 	@Post()
 	@UseGuards(RolesGuard)
 	@Roles(UserRoles.ROOT)

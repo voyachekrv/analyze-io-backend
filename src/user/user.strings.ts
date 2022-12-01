@@ -1,3 +1,6 @@
+/**
+ * Строки для модуля Пользователей
+ */
 export enum UserStrings {
 	BAD_CREDENTIALS = 'Некорректный email или пароль',
 	NOT_FOUND_SMTH = '%s с ID = %d не существует',

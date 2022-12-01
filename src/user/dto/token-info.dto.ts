@@ -1,7 +1,19 @@
+/**
+ * Данные, извлекаемые из токена авторизации
+ */
 export interface TokenInfoDto {
-	email: string;
-
+	/**
+	 * ID пользователя
+	 */
 	id: number;
 
+	/**
+	 * Email
+	 */
+	email: string;
+
+	/**
+	 * Роль пользователя
+	 */
 	role: string;
 }

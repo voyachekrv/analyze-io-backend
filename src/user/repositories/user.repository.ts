@@ -5,10 +5,17 @@ import { InjectKnex, Knex } from 'nestjs-knex';
 import { User } from '../entities/user.entity';
 import { UserStrings } from '../user.strings';
 
+/**
+ * Репозиторий для сущности "Пользователь"
+ */
 @Injectable()
 export class UserRepository {
 	constructor(@InjectKnex() private readonly knex: Knex) {}
 
+	/**
+	 * Получение всех экземпляров сущности "Пользователь"
+	 * @returns Список пользователей
+	 */
 	public async find(): Promise<User[]> {
 		return (await this.knex
 			.withSchema('usr')
@@ -16,6 +23,11 @@ export class UserRepository {
 			.from('user')) as User[];
 	}
 
+	/**
+	 * Сохранение экземпляра сущности "Пользователь"
+	 * @param user Сущность "Пользователь"
+	 * @returns Созданная сущность с присвоенным ID
+	 */
 	public async save(user: User): Promise<User> {
 		const newEntityId = (
 			await this.knex
@@ -34,6 +46,11 @@ export class UserRepository {
 		return await this.findOne(newEntityId);
 	}
 
+	/**
+	 * Получение сущности "Пользователь" по его email
+	 * @param email Email
+	 * @returns Сущность "Пользователь"
+	 */
 	public async findByEmail(email: string): Promise<User | undefined> {
 		const entity = (await this.knex
 			.withSchema('usr')
@@ -48,6 +65,11 @@ export class UserRepository {
 		return undefined;
 	}
 
+	/**
+	 * Получение сущности "Пользователь" по его ID
+	 * @param id ID записи
+	 * @returns Сущность "Пользователь"
+	 */
 	public async findOne(id: number): Promise<User> {
 		const entity = (await this.knex
 			.withSchema('usr')
@@ -58,6 +80,12 @@ export class UserRepository {
 		return entity[0];
 	}
 
+	/**
+	 * Получение сущности "Пользователь" по его ID
+	 * или возврат ошибки 404 в случае, если сущность не найдена
+	 * @param id ID записи
+	 * @returns Сущность "Пользователь"
+	 */
 	public async findOneOr404(id: number): Promise<User> {
 		const entity = (await this.knex
 			.withSchema('usr')

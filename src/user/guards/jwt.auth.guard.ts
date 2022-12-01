@@ -7,10 +7,25 @@ import {
 import { Observable } from 'rxjs';
 import { JwtService } from '@nestjs/jwt';
 
+/**
+ * Guard для проверки bearer-токена
+ */
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
+	/**
+	 * Guard для проверки bearer-токена
+	 * @param jwtService Сервис для работы с JWT
+	 */
 	constructor(private jwtService: JwtService) {}
 
+	/**
+	 * Возвращаемое значение указывает,
+	 * разрешено ли выполнение текущего запроса.
+	 * Возврат может быть либо синхронным (`boolean`),
+	 * или асинхронный ("Promise" или "Observable")
+	 * @param context Текущий контекст выполнения
+	 * @returns Разрешить или отказать в выполнении запроса
+	 */
 	canActivate(
 		context: ExecutionContext
 	): boolean | Promise<boolean> | Observable<boolean> {
