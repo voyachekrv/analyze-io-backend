@@ -8,6 +8,7 @@ import { Observable } from 'rxjs';
 import { JwtService } from '@nestjs/jwt';
 import { Reflector } from '@nestjs/core';
 import { ROLES_KEY } from '../decorators/roles-auth.decorator';
+import { UserStrings } from '../user.strings';
 
 /**
  * Guard для проверки роли пользователя перед выполнением запроса
@@ -56,7 +57,7 @@ export class RolesGuard implements CanActivate {
 				return requiredRoles.includes(user.role);
 			}
 		} catch (e) {
-			throw new ForbiddenException('Forbidden');
+			throw new ForbiddenException(UserStrings.CANNOT_PERMITE);
 		}
 	}
 }

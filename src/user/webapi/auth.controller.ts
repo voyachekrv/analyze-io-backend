@@ -7,6 +7,12 @@ import {
 	UsePipes,
 	ValidationPipe
 } from '@nestjs/common';
+import {
+	ApiBearerAuth,
+	ApiOperation,
+	ApiResponse,
+	ApiTags
+} from '@nestjs/swagger';
 import { Roles } from '../decorators/roles-auth.decorator';
 import { TokenInfoDto } from '../dto/token-info.dto';
 import { TokenDto } from '../dto/token.dto';
@@ -21,6 +27,8 @@ import { UserVerifyService } from '../services/user-verify.service';
  * Контроллер авторизации пользователя
  */
 @Controller('user/auth')
+@ApiTags('Авторизация пользователя')
+@ApiBearerAuth()
 export class AuthController {
 	/**
 	 * Контроллер авторизации пользователя
@@ -40,6 +48,22 @@ export class AuthController {
 	@Post('/login')
 	@HttpCode(200)
 	@UsePipes(new ValidationPipe())
+	@ApiOperation({
+		summary: 'Авторизация пользователя'
+	})
+	@ApiResponse({
+		type: TokenDto,
+		description: 'Токен авторизации',
+		status: 200
+	})
+	@ApiResponse({
+		status: 400,
+		description: 'Bad request'
+	})
+	@ApiResponse({
+		status: 401,
+		description: 'Unauthorized'
+	})
 	public async login(@Body() dto: UserSignInDto): Promise<TokenDto> {
 		return await this.authService.login(dto);
 	}
@@ -51,6 +75,18 @@ export class AuthController {
 	 */
 	@Post('/registration')
 	@UsePipes(new ValidationPipe())
+	@ApiOperation({
+		summary: 'Регистрация пользователя'
+	})
+	@ApiResponse({
+		type: TokenDto,
+		description: 'Токен авторизации',
+		status: 201
+	})
+	@ApiResponse({
+		status: 400,
+		description: 'Bad request'
+	})
 	public async registration(@Body() dto: UserCreateDto): Promise<TokenDto> {
 		return await this.authService.register(dto);
 	}
@@ -65,6 +101,22 @@ export class AuthController {
 	@UseGuards(RolesGuard)
 	@Roles(UserRoles.USER, UserRoles.ROOT)
 	@UsePipes(new ValidationPipe())
+	@ApiOperation({
+		summary: 'Регистрация пользователя'
+	})
+	@ApiResponse({
+		type: TokenInfoDto,
+		description: 'Токен авторизации',
+		status: 200
+	})
+	@ApiResponse({
+		status: 400,
+		description: 'Bad request'
+	})
+	@ApiResponse({
+		status: 403,
+		description: 'Forbidden'
+	})
 	public whois(@Body() dto: TokenDto): TokenInfoDto {
 		return this.userVerifyService.verifyUser(dto.token);
 	}

@@ -1,4 +1,6 @@
+import { ApiProperty } from '@nestjs/swagger';
 import { IsString, IsNotEmpty, IsEmail, MaxLength } from 'class-validator';
+import { UserStrings } from '../user.strings';
 
 /**
  * Данные для авторизации пользователя
@@ -7,17 +9,27 @@ export class UserSignInDto {
 	/**
 	 * Email
 	 */
-	@IsString({ message: 'should be string' })
-	@IsNotEmpty({ message: 'should be not empty' })
-	@IsEmail({ message: 'should be email' })
+	@ApiProperty({
+		description: 'Email пользователя',
+		example: 'john@doe.com',
+		maxLength: 200
+	})
+	@IsString({ message: UserStrings.SHOULD_BE_STRING })
+	@IsNotEmpty({ message: UserStrings.SHOULD_BE_NOT_EMPTY })
+	@IsEmail({ message: UserStrings.SHOULD_BE_EMAIL })
 	@MaxLength(200)
 	email: string;
 
 	/**
 	 * Пароль
 	 */
-	@IsString({ message: 'should be string' })
-	@IsNotEmpty({ message: 'should be not empty' })
+	@ApiProperty({
+		description: 'Пароль пользователя',
+		example: 'qwerty',
+		maxLength: 200
+	})
+	@IsString({ message: UserStrings.SHOULD_BE_STRING })
+	@IsNotEmpty({ message: UserStrings.SHOULD_BE_NOT_EMPTY })
 	@MaxLength(200)
 	password: string;
 }

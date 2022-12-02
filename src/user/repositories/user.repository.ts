@@ -47,6 +47,33 @@ export class UserRepository {
 	}
 
 	/**
+	 * Обновление экземпляра сущности "Пользователь"
+	 * @param user Сущность "Пользователь"
+	 * @returns Обновленная сущность
+	 */
+	public async update(user: User): Promise<User> {
+		await this.knex
+			.withSchema('usr')
+			.table('user')
+			.where({ id: user.id })
+			.update(user);
+
+		return await this.findOne(user.id);
+	}
+
+	/**
+	 * Удаление списка сущностей "Пользователь"
+	 * @param ids ID пользователей для удаления
+	 */
+	public async deleteByIds(ids: number[]): Promise<void> {
+		await this.knex
+			.withSchema('usr')
+			.table('user')
+			.delete()
+			.whereIn('id', ids);
+	}
+
+	/**
 	 * Получение сущности "Пользователь" по его email
 	 * @param email Email
 	 * @returns Сущность "Пользователь"

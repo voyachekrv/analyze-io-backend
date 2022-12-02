@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { JwtService } from '@nestjs/jwt';
+import { UserStrings } from '../user.strings';
 
 /**
  * Guard для проверки bearer-токена
@@ -43,7 +44,7 @@ export class JwtAuthGuard implements CanActivate {
 			}
 		} catch (e) {
 			throw new UnauthorizedException({
-				message: 'User is not signed authorized'
+				message: UserStrings.UNAUTHORIZED_USER
 			});
 		}
 	}

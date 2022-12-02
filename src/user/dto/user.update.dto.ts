@@ -3,17 +3,23 @@ import { IsEmail, IsNotEmpty, IsString, MaxLength } from 'class-validator';
 import { UserStrings } from '../user.strings';
 
 /**
- * Данные для создания пользователя
+ * Информация для изменения пользователя
  */
-export class UserCreateDto {
+export class UserUpdateDto {
+	/**
+	 * Информация для изменения пользователя
+	 * @param email Email
+	 * @param password Пароль
+	 */
+	constructor(email: string, password: string) {
+		this.email = email;
+		this.password = password;
+	}
+
 	/**
 	 * Email
 	 */
-	@ApiProperty({
-		description: 'Email пользователя',
-		example: 'john@doe.com',
-		maxLength: 200
-	})
+	@ApiProperty({ description: 'Email пользователя', example: 'john@doe.com' })
 	@IsString({ message: UserStrings.SHOULD_BE_STRING })
 	@IsNotEmpty({ message: UserStrings.SHOULD_BE_NOT_EMPTY })
 	@IsEmail({ message: UserStrings.SHOULD_BE_EMAIL })
