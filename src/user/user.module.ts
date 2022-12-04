@@ -19,13 +19,6 @@ const jwtConfig = (configService: ConfigService): JwtModuleOptions => {
 	};
 };
 
-/* JwtModule.register({
-			secret: 'secret_key_sasasasasa',
-			signOptions: {
-				expiresIn: '48h'
-			}
-		}) */
-
 @Module({
 	imports: [
 		ConfigModule,

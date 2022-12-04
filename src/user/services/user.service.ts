@@ -1,9 +1,4 @@
-import {
-	BadRequestException,
-	ForbiddenException,
-	Injectable
-} from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { DeleteDto } from 'src/utils/delete.dto';
 import { format } from 'util';
 import { TokenInfoDto } from '../dto/token-info.dto';
@@ -16,7 +11,6 @@ import { UserRoles, User } from '../entities/user.entity';
 import { UserMapper } from '../mappers/user.mapper';
 import { UserRepository } from '../repositories/user.repository';
 import { UserStrings } from '../user.strings';
-import { UserVerifyService } from './user-verify.service';
 
 /**
  * Сервис для работы с пользователями
@@ -32,9 +26,7 @@ export class UserService {
 	 */
 	constructor(
 		private readonly userRepository: UserRepository,
-		private readonly jwtService: JwtService,
-		private readonly userMapper: UserMapper,
-		private readonly userVerifyService: UserVerifyService
+		private readonly userMapper: UserMapper
 	) {}
 
 	/**
@@ -69,15 +61,9 @@ export class UserService {
 	/**
 	 * Поиск пользователя для его обновления
 	 * @param id ID пользователя
-	 * @param token Токен авторизации
 	 * @returns DTO обновления
 	 */
-	public async findForUpdate(
-		id: number,
-		token: string
-	): Promise<UserUpdateDto> {
-		this.userVerifyService.verifyUserAccess(id, token);
-
+	public async findForUpdate(id: number): Promise<UserUpdateDto> {
 		return this.userMapper.toUpdateDto(
 			await this.userRepository.findOneOr404(id)
 		);
@@ -116,10 +102,9 @@ export class UserService {
 	public async update(
 		id: number,
 		dto: UserUpdateDto,
-		token: string
+		user: TokenInfoDto
 	): Promise<User> {
-		this.userVerifyService.verifyUserAccess(id, token);
-		await this.verifyUniqueEmailOnUpdate(id, dto.email);
+		await this.verifyUniqueEmailOnUpdate(id, user.email);
 
 		return await this.userRepository.update(
 			await this.userMapper.update(dto, id)
@@ -131,9 +116,7 @@ export class UserService {
 	 * @param dto ID сущностей для удаления
 	 * @param token Bearer-токен
 	 */
-	public async remove(dto: DeleteDto, token: string): Promise<void> {
-		this.verifyUserDelete(token, dto.ids);
-
+	public async remove(dto: DeleteDto): Promise<void> {
 		await this.userRepository.deleteByIds(dto.ids);
 	}
 
@@ -174,24 +157,6 @@ export class UserService {
 						UserStrings.USER_NOMINATIVE,
 						email
 					)
-				);
-			}
-		}
-	}
-
-	// ? Вынести в guard
-	/**
-	 * Проверка на возможность удаления обычным пользователем аккаунтов других пользоватеей
-	 * @param bearer Токен пользователя
-	 * @param ids Идентификаторы удаляемых пользователей
-	 */
-	private verifyUserDelete(bearer: string, ids: number[]): void {
-		const user: TokenInfoDto = this.jwtService.verify(bearer);
-
-		if (user.role !== UserRoles.ROOT) {
-			if (!ids.includes(user.id) || ids.length > 1) {
-				throw new ForbiddenException(
-					UserStrings.CANNOT_DELETE_THIS_USER
 				);
 			}
 		}

@@ -21,14 +21,17 @@ import {
 import { Request } from 'express';
 import { CreationResultDto } from 'src/utils/creation-result.dto';
 import { DeleteDto } from 'src/utils/delete.dto';
-import { reqToBearer } from 'src/utils/req-to-bearer';
 import { Roles } from '../decorators/roles-auth.decorator';
+import { TokenInfoDto } from '../dto/token-info.dto';
 import { UserCardDto } from '../dto/user.card.dto';
 import { UserCreateDto } from '../dto/user.create.dto';
 import { UserItemDto } from '../dto/user.item.dto';
 import { UserRolesDto } from '../dto/user.roles.dto';
 import { UserUpdateDto } from '../dto/user.update.dto';
 import { UserRoles } from '../entities/user.entity';
+import { OnlyOwnerDeleteGuard } from '../guards/only-owner-delete.guard';
+import { OnlyOwnerGetForUpdateGuard } from '../guards/only-owner-get-for-update.guard';
+import { OnlyOwnerGuard } from '../guards/only-owner.guard';
 import { RolesGuard } from '../guards/roles.guard';
 import { UserService } from '../services/user.service';
 
@@ -134,7 +137,7 @@ export class UserController {
 	 * @returns DTO обновления
 	 */
 	@Get(':id/edit')
-	@UseGuards(RolesGuard)
+	@UseGuards(RolesGuard, OnlyOwnerGetForUpdateGuard)
 	@Roles(UserRoles.USER, UserRoles.ROOT)
 	@ApiOperation({
 		summary: 'Получение информации для обновления пользователя'
@@ -157,14 +160,10 @@ export class UserController {
 		description: 'Not found'
 	})
 	public async findForUpdate(
-		@Param('id') id: number,
-		@Req() req: Request
+		@Param('id') id: number
 	): Promise<UserUpdateDto> {
 		if (!isNaN(Number(id))) {
-			return await this.userService.findForUpdate(
-				Number(id),
-				reqToBearer(req)
-			);
+			return await this.userService.findForUpdate(Number(id));
 		}
 		throw new BadRequestException();
 	}
@@ -212,7 +211,7 @@ export class UserController {
 	 */
 	@Patch(':id')
 	@UsePipes(new ValidationPipe())
-	@UseGuards(RolesGuard)
+	@UseGuards(RolesGuard, OnlyOwnerGuard)
 	@Roles(UserRoles.USER, UserRoles.ROOT)
 	@ApiOperation({
 		summary: 'Обновление данных о пользователе'
@@ -241,7 +240,11 @@ export class UserController {
 	): Promise<CreationResultDto> {
 		return new CreationResultDto(
 			(
-				await this.userService.update(Number(id), dto, reqToBearer(req))
+				await this.userService.update(
+					Number(id),
+					dto,
+					req['user'] as TokenInfoDto
+				)
 			).id
 		);
 	}
@@ -253,7 +256,7 @@ export class UserController {
 	 */
 	@Delete()
 	@UsePipes(new ValidationPipe())
-	@UseGuards(RolesGuard)
+	@UseGuards(RolesGuard, OnlyOwnerDeleteGuard)
 	@Roles(UserRoles.USER, UserRoles.ROOT)
 	@ApiOperation({
 		summary: 'Удаление пользователей'
@@ -274,10 +277,7 @@ export class UserController {
 		status: 404,
 		description: 'Not found'
 	})
-	public async remove(
-		@Req() req: Request,
-		@Body() dto: DeleteDto
-	): Promise<void> {
-		await this.userService.remove(dto, reqToBearer(req));
+	public async remove(@Body() dto: DeleteDto): Promise<void> {
+		await this.userService.remove(dto);
 	}
 }

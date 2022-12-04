@@ -1,8 +1,6 @@
-import { ForbiddenException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { TokenInfoDto } from '../dto/token-info.dto';
-import { UserRoles } from '../entities/user.entity';
-import { UserStrings } from '../user.strings';
 
 /**
  * Сервис работы с подтверждением пользователя и его доступа
@@ -27,23 +25,5 @@ export class UserVerifyService {
 			id: verifyResult.id,
 			role: verifyResult.role
 		};
-	}
-
-	// ? Вынести в guard
-	// TODO: Вынести в guard
-	/**
-	 * Проверка доступа пользователя к методам,
-	 * которые он может выполнять исключительно над собственными данными
-	 * @param id ID пользователя
-	 * @param bearer Bearer-токен
-	 */
-	public verifyUserAccess(id: number, bearer: string): void {
-		const tokenInfo: TokenInfoDto = this.jwtService.verify(bearer);
-
-		if (tokenInfo.role !== UserRoles.ROOT) {
-			if (tokenInfo.id !== id) {
-				throw new ForbiddenException(UserStrings.CANNOT_PERMITE);
-			}
-		}
 	}
 }

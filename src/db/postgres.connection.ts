@@ -1,5 +1,10 @@
 import { ConfigService } from '@nestjs/config';
 
+/**
+ * Подключение к PostgreSQL
+ * @param configService Сервис доступа к конфигу
+ * @returns Подключение к БД
+ */
 export const postgressConnection = (configService: ConfigService) => {
 	return {
 		config: {

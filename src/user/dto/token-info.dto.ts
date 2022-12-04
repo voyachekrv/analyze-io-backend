@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { UserRoles } from '../entities/user.entity';
 
 /**
  * Данные, извлекаемые из токена авторизации
@@ -19,6 +20,11 @@ export class TokenInfoDto {
 	/**
 	 * Роль пользователя
 	 */
-	@ApiProperty({ description: 'Роль пользователя', example: 'USER' })
-	role: string;
+	@ApiProperty({
+		description: 'Роль пользователя',
+		example: 'USER',
+		enum: UserRoles,
+		enumName: 'UserRoles'
+	})
+	role: UserRoles;
 }
