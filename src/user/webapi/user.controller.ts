@@ -4,10 +4,10 @@ import {
 	Controller,
 	Delete,
 	Get,
+	HttpCode,
 	Param,
-	Patch,
+	Put,
 	Post,
-	Req,
 	UseGuards,
 	UsePipes,
 	ValidationPipe
@@ -18,11 +18,9 @@ import {
 	ApiResponse,
 	ApiTags
 } from '@nestjs/swagger';
-import { Request } from 'express';
-import { CreationResultDto } from 'src/utils/creation-result.dto';
-import { DeleteDto } from 'src/utils/delete.dto';
+import { CreationResultDto } from '../../utils/creation-result.dto';
+import { DeleteDto } from '../../utils/delete.dto';
 import { Roles } from '../decorators/roles-auth.decorator';
-import { TokenInfoDto } from '../dto/token-info.dto';
 import { UserCardDto } from '../dto/user.card.dto';
 import { UserCreateDto } from '../dto/user.create.dto';
 import { UserItemDto } from '../dto/user.item.dto';
@@ -209,7 +207,7 @@ export class UserController {
 	 * @param dto DTO обновления
 	 * @returns ID обновленной сущности
 	 */
-	@Patch(':id')
+	@Put(':id')
 	@UsePipes(new ValidationPipe())
 	@UseGuards(RolesGuard, OnlyOwnerGuard)
 	@Roles(UserRoles.USER, UserRoles.ROOT)
@@ -235,18 +233,9 @@ export class UserController {
 	})
 	public async update(
 		@Param('id') id: number,
-		@Req() req: Request,
 		@Body() dto: UserUpdateDto
-	): Promise<CreationResultDto> {
-		return new CreationResultDto(
-			(
-				await this.userService.update(
-					Number(id),
-					dto,
-					req['user'] as TokenInfoDto
-				)
-			).id
-		);
+	): Promise<UserUpdateDto> {
+		return await this.userService.update(id, dto);
 	}
 
 	/**
@@ -255,6 +244,7 @@ export class UserController {
 	 * @param dto DTO удаления
 	 */
 	@Delete()
+	@HttpCode(204)
 	@UsePipes(new ValidationPipe())
 	@UseGuards(RolesGuard, OnlyOwnerDeleteGuard)
 	@Roles(UserRoles.USER, UserRoles.ROOT)
@@ -263,7 +253,7 @@ export class UserController {
 	})
 	@ApiResponse({
 		description: 'Пользователи были удалены',
-		status: 200
+		status: 204
 	})
 	@ApiResponse({
 		status: 400,

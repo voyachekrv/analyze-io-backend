@@ -1,19 +1,18 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import { KnexModule } from 'nestjs-knex';
-import { postgressConnection } from './db/postgres.connection';
+import { ConfigModule } from '@nestjs/config';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserModule } from './user/user.module';
+import { config } from 'dotenv';
+import { dataSourceOptions } from './db/data-source';
+
+config();
 
 @Module({
 	imports: [
 		ConfigModule.forRoot({
 			envFilePath: '.env'
 		}),
-		KnexModule.forRootAsync({
-			imports: [ConfigModule],
-			inject: [ConfigService],
-			useFactory: postgressConnection
-		}),
+		TypeOrmModule.forRoot(dataSourceOptions),
 		UserModule
 	]
 })

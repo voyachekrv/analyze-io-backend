@@ -102,7 +102,7 @@ export class AuthController {
 	@Roles(UserRoles.USER, UserRoles.ROOT)
 	@UsePipes(new ValidationPipe())
 	@ApiOperation({
-		summary: 'Регистрация пользователя'
+		summary: 'Возврат информации о зарегистрированном пользователе'
 	})
 	@ApiResponse({
 		type: TokenInfoDto,
