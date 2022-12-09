@@ -65,6 +65,12 @@ export class UserMapper {
 		);
 	}
 
+	/**
+	 * Конвертация DTO обновления в сущность
+	 * @param dto DTO обновления пользователя
+	 * @param id ID пользователя
+	 * @returns Сущность "пользователь" (пароль зашифрован)
+	 */
 	public async update(dto: UserUpdateDto, id: number): Promise<User> {
 		const entity = await this.userRepository.findOne(id);
 
