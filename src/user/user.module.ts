@@ -9,6 +9,8 @@ import { UserService } from './services/user.service';
 import { UserMapper } from './mappers/user.mapper';
 import { UserVerifyService } from './services/user-verify.service';
 import { PasswordService } from './services/password.service';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { User } from './entities/user.entity';
 
 const jwtConfig = (configService: ConfigService): JwtModuleOptions => {
 	return {
@@ -26,7 +28,8 @@ const jwtConfig = (configService: ConfigService): JwtModuleOptions => {
 			imports: [ConfigModule],
 			inject: [ConfigService],
 			useFactory: jwtConfig
-		})
+		}),
+		TypeOrmModule.forFeature([User])
 	],
 	controllers: [AuthController, UserController],
 	providers: [

@@ -1,7 +1,5 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { DeleteDto } from 'src/utils/delete.dto';
-import { format } from 'util';
-import { TokenInfoDto } from '../dto/token-info.dto';
 import { UserCardDto } from '../dto/user.card.dto';
 import { UserCreateDto } from '../dto/user.create.dto';
 import { UserItemDto } from '../dto/user.item.dto';
@@ -10,7 +8,6 @@ import { UserUpdateDto } from '../dto/user.update.dto';
 import { UserRoles, User } from '../entities/user.entity';
 import { UserMapper } from '../mappers/user.mapper';
 import { UserRepository } from '../repositories/user.repository';
-import { UserStrings } from '../user.strings';
 
 /**
  * Сервис для работы с пользователями
@@ -42,7 +39,7 @@ export class UserService {
 	 * @returns Список экземпляров DTO списка
 	 */
 	public async findAll(): Promise<UserItemDto[]> {
-		return (await this.userRepository.find()).map(entity =>
+		return (await this.userRepository.findAll()).map(entity =>
 			this.userMapper.toItemDto(entity)
 		);
 	}
@@ -85,8 +82,6 @@ export class UserService {
 	 * @returns Созаднный пользователь
 	 */
 	public async create(dto: UserCreateDto, role: UserRoles): Promise<User> {
-		await this.verifyUniqueEmailOnCreate(dto.email);
-
 		return await this.userRepository.save(
 			this.userMapper.create(dto, role)
 		);
@@ -96,69 +91,24 @@ export class UserService {
 	 * Изменение пользователя
 	 * @param id ID пользователя
 	 * @param dto DTO изменения
-	 * @param token Bearer-токен
 	 * @returns ID измененной сущности
 	 */
 	public async update(
 		id: number,
-		dto: UserUpdateDto,
-		user: TokenInfoDto
-	): Promise<User> {
-		await this.verifyUniqueEmailOnUpdate(id, user.email);
-
-		return await this.userRepository.update(
-			await this.userMapper.update(dto, id)
+		dto: UserUpdateDto
+	): Promise<UserUpdateDto> {
+		return this.userMapper.toUpdateDto(
+			await this.userRepository.save(
+				await this.userMapper.update(dto, id)
+			)
 		);
 	}
 
 	/**
 	 * Удаление пользователей
 	 * @param dto ID сущностей для удаления
-	 * @param token Bearer-токен
 	 */
 	public async remove(dto: DeleteDto): Promise<void> {
 		await this.userRepository.deleteByIds(dto.ids);
-	}
-
-	// ? Вынести в guard
-	/**
-	 * Подтверждение уникальности email при создании пользователя
-	 * @param email Email
-	 */
-	private async verifyUniqueEmailOnCreate(email: string): Promise<void> {
-		if (await this.userRepository.findByEmail(email)) {
-			throw new BadRequestException(
-				format(
-					UserStrings.ALREADY_EXISTS_EMAIL,
-					UserStrings.USER_NOMINATIVE,
-					email
-				)
-			);
-		}
-	}
-
-	// ? Вынести в guard
-	/**
-	 * Проверка наличия email в базе данных у пользователя под другим идентификатором
-	 * @param id ID пользователя
-	 * @param email Email пользователя
-	 */
-	private async verifyUniqueEmailOnUpdate(
-		id: number,
-		email: string
-	): Promise<void> {
-		const user = await this.userRepository.findByEmail(email);
-
-		if (user) {
-			if (user.id !== id && user.email === email) {
-				throw new BadRequestException(
-					format(
-						UserStrings.ALREADY_EXISTS_EMAIL,
-						UserStrings.USER_NOMINATIVE,
-						email
-					)
-				);
-			}
-		}
 	}
 }

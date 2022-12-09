@@ -72,7 +72,7 @@ export class UserMapper {
 	 * @returns Сущность "пользователь" (пароль зашифрован)
 	 */
 	public async update(dto: UserUpdateDto, id: number): Promise<User> {
-		const entity = await this.userRepository.findOne(id);
+		const entity = await this.userRepository.findById(id);
 
 		entity.email = dto.email;
 		entity.password = this.passwordService.encrypt(dto.password);

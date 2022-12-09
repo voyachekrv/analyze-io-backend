@@ -1,7 +1,7 @@
-/* eslint-disable newline-per-chained-call */
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { format } from 'util';
-import { InjectKnex, Knex } from 'nestjs-knex';
 import { User } from '../entities/user.entity';
 import { UserStrings } from '../user.strings';
 
@@ -9,56 +9,20 @@ import { UserStrings } from '../user.strings';
  * Репозиторий для сущности "Пользователь"
  */
 @Injectable()
-export class UserRepository {
-	constructor(@InjectKnex() private readonly knex: Knex) {}
+export class UserRepository extends Repository<User> {
+	constructor(
+		@InjectRepository(User)
+		repository: Repository<User>
+	) {
+		super(repository.target, repository.manager, repository.queryRunner);
+	}
 
 	/**
 	 * Получение всех экземпляров сущности "Пользователь"
 	 * @returns Список пользователей
 	 */
-	public async find(): Promise<User[]> {
-		return (await this.knex
-			.withSchema('usr')
-			.select('*')
-			.from('user')) as User[];
-	}
-
-	/**
-	 * Сохранение экземпляра сущности "Пользователь"
-	 * @param user Сущность "Пользователь"
-	 * @returns Созданная сущность с присвоенным ID
-	 */
-	public async save(user: User): Promise<User> {
-		const newEntityId = (
-			await this.knex
-				.withSchema('usr')
-				.insert(
-					{
-						email: user.email,
-						password: user.password,
-						role: user.role
-					},
-					['id']
-				)
-				.into('user')
-		)[0].id as number;
-
-		return await this.findOne(newEntityId);
-	}
-
-	/**
-	 * Обновление экземпляра сущности "Пользователь"
-	 * @param user Сущность "Пользователь"
-	 * @returns Обновленная сущность
-	 */
-	public async update(user: User): Promise<User> {
-		await this.knex
-			.withSchema('usr')
-			.table('user')
-			.where({ id: user.id })
-			.update(user);
-
-		return await this.findOne(user.id);
+	public async findAll(): Promise<User[]> {
+		return await this.createQueryBuilder('user').getMany();
 	}
 
 	/**
@@ -66,11 +30,11 @@ export class UserRepository {
 	 * @param ids ID пользователей для удаления
 	 */
 	public async deleteByIds(ids: number[]): Promise<void> {
-		await this.knex
-			.withSchema('usr')
-			.table('user')
+		await this.createQueryBuilder('user')
 			.delete()
-			.whereIn('id', ids);
+			.from(User)
+			.whereInIds(ids)
+			.execute();
 	}
 
 	/**
@@ -79,14 +43,12 @@ export class UserRepository {
 	 * @returns Сущность "Пользователь"
 	 */
 	public async findByEmail(email: string): Promise<User | undefined> {
-		const entity = (await this.knex
-			.withSchema('usr')
-			.select('*')
-			.from('user')
-			.where('email', '=', email)) as User[];
+		const entity = await this.createQueryBuilder('user')
+			.where({ email })
+			.getOne();
 
-		if (entity.length > 0) {
-			return entity[0];
+		if (entity) {
+			return entity;
 		}
 
 		return undefined;
@@ -97,14 +59,12 @@ export class UserRepository {
 	 * @param id ID записи
 	 * @returns Сущность "Пользователь"
 	 */
-	public async findOne(id: number): Promise<User> {
-		const entity = (await this.knex
-			.withSchema('usr')
-			.select('*')
-			.from('user')
-			.where('id', '=', id)) as User[];
+	public async findById(id: number): Promise<User> {
+		const entity = await this.createQueryBuilder('user')
+			.where({ id })
+			.getOne();
 
-		return entity[0];
+		return entity;
 	}
 
 	/**
@@ -114,13 +74,11 @@ export class UserRepository {
 	 * @returns Сущность "Пользователь"
 	 */
 	public async findOneOr404(id: number): Promise<User> {
-		const entity = (await this.knex
-			.withSchema('usr')
-			.select('*')
-			.from('user')
-			.where('id', '=', id)) as User[];
+		const entity = await this.createQueryBuilder('user')
+			.where({ id })
+			.getOne();
 
-		if (entity.length === 0) {
+		if (!entity) {
 			throw new NotFoundException(
 				format(
 					UserStrings.NOT_FOUND_SMTH,
@@ -130,6 +88,6 @@ export class UserRepository {
 			);
 		}
 
-		return entity[0];
+		return entity;
 	}
 }
