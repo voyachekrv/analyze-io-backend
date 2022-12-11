@@ -10,7 +10,8 @@ import {
 	Post,
 	UseGuards,
 	UsePipes,
-	ValidationPipe
+	ValidationPipe,
+	Query
 } from '@nestjs/common';
 import {
 	ApiBearerAuth,
@@ -18,6 +19,7 @@ import {
 	ApiResponse,
 	ApiTags
 } from '@nestjs/swagger';
+import { Page } from '../../utils/page';
 import { CreationResultDto } from '../../utils/creation-result.dto';
 import { DeleteDto } from '../../utils/delete.dto';
 import { Roles } from '../decorators/roles-auth.decorator';
@@ -32,6 +34,7 @@ import { OnlyOwnerGetForUpdateGuard } from '../guards/only-owner-get-for-update.
 import { OnlyOwnerGuard } from '../guards/only-owner.guard';
 import { RolesGuard } from '../guards/roles.guard';
 import { UserService } from '../services/user.service';
+import { ValidateQueryParamGuard } from '../guards/validate-query-param.guard';
 
 /**
  * Контроллер для работы с пользователями
@@ -51,23 +54,56 @@ export class UserController {
 	 * @returns Список пользователей
 	 */
 	@Get()
-	@UseGuards(RolesGuard)
+	@UseGuards(RolesGuard, ValidateQueryParamGuard)
 	@Roles(UserRoles.USER, UserRoles.ROOT)
 	@ApiOperation({
 		summary: 'Получение списка пользователей'
 	})
 	@ApiResponse({
-		type: [UserItemDto],
+		schema: {
+			type: 'object',
+			properties: {
+				list: {
+					type: 'array',
+					items: {
+						type: 'object',
+						properties: {
+							id: { type: 'number', example: 1 },
+							email: { type: 'string', example: 'john@doe.com' },
+							name: { type: 'string', example: 'Jonh Doe' }
+						}
+					}
+				},
+				first: { type: 'number', example: 0 },
+				total: { type: 'number', example: 7 },
+				totalPages: { type: 'number', example: 4 },
+				totalOnPage: { type: 'number', example: 7 },
+				current: { type: 'number', example: 4 },
+				last: { type: 'number', example: 3 },
+				previous: { type: 'number', example: 3 },
+				next: { type: 'number', example: 5 }
+			}
+		},
 		description: 'Список пользователей',
 		status: 200
+	})
+	@ApiResponse({
+		status: 400,
+		description: 'Некоректно введенный параметр запроса'
 	})
 	@ApiResponse({
 		status: 403,
 		description: 'Forbidden'
 	})
-	// TODO: Сделать параметры для поиска и order by + пагинация
-	public async index(): Promise<UserItemDto[]> {
-		return await this.userService.findAll();
+	@ApiResponse({
+		status: 404,
+		description: 'В случае обращения к несуществующему номеру страницы'
+	})
+	// TODO: Сделать параметры для поиска и order by
+	public async index(
+		@Query('page') page: number
+	): Promise<Page<UserItemDto>> {
+		return await this.userService.findAll(Number(page));
 	}
 
 	/**
@@ -215,7 +251,7 @@ export class UserController {
 		summary: 'Обновление данных о пользователе'
 	})
 	@ApiResponse({
-		type: CreationResultDto,
+		type: UserUpdateDto,
 		description: 'ID обновленнного пользователя',
 		status: 200
 	})

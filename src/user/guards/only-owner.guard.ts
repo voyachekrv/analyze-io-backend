@@ -28,8 +28,9 @@ export class OnlyOwnerGuard implements CanActivate {
 	): boolean | Promise<boolean> | Observable<boolean> {
 		const user = context.switchToHttp().getRequest()
 			.user as UserRequestData;
+
 		const url = context.switchToHttp().getRequest().url as string;
-		const userIdFromRequest = Number(url.at(-1));
+		const userIdFromRequest = Number(url.split('/').at(-1));
 
 		if (user.role !== UserRoles.ROOT) {
 			if (user.id !== userIdFromRequest) {

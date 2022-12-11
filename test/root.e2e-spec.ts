@@ -6,10 +6,15 @@ describe('UserController & AuthController (root-user) (e2e)', () => {
 	let app: INestApplication;
 
 	const oldRoot = { email: 'root@root.com', password: 'toor' };
-	const testDataUser = { email: 'user@gmail.com', password: 'test' };
+	const testDataUser = {
+		email: 'user@gmail.com',
+		password: 'test',
+		name: 'User Doe'
+	};
 	const testDataUserUpdated = {
 		email: 'user@yandex.ru',
-		password: 'new-test'
+		password: 'new-test',
+		name: 'Mike Doe'
 	};
 
 	let rootToken;

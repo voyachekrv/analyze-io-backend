@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { DeleteDto } from 'src/utils/delete.dto';
+import { DeleteDto } from '../../utils/delete.dto';
+import { Page } from '../../utils/page';
 import { UserCardDto } from '../dto/user.card.dto';
 import { UserCreateDto } from '../dto/user.create.dto';
 import { UserItemDto } from '../dto/user.item.dto';
@@ -38,10 +39,10 @@ export class UserService {
 	 * Поиск всех пользователей
 	 * @returns Список экземпляров DTO списка
 	 */
-	public async findAll(): Promise<UserItemDto[]> {
-		return (await this.userRepository.findAll()).map(entity =>
-			this.userMapper.toItemDto(entity)
-		);
+	public async findAll(page: number): Promise<Page<UserItemDto>> {
+		return (await this.userRepository.findAll(page)).map(
+			this.userMapper.toItemDto
+		) as Page<UserItemDto>;
 	}
 
 	/**

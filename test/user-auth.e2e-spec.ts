@@ -5,23 +5,33 @@ import { testNestApplication } from './test-prepared';
 describe('UserController & AuthController (e2e)', () => {
 	let app: INestApplication;
 
-	const testDataRight = { email: 'root@root.com', password: 'toor' };
-	const testDataBadPassword = {
+	const testDataRight = {
 		email: 'root@root.com',
-		password: 'tor'
+		password: 'toor'
 	};
+	const testDataBadPassword = { email: 'root@root.com', password: 'tor' };
 
-	const testDataRoot = { email: 'root2@gmail.com', password: 'testRoot' };
-	const testDataUser = { email: 'user@gmail.com', password: 'test' };
+	const testDataRoot = {
+		email: 'root2@gmail.com',
+		password: 'testRoot',
+		name: 'Root Root'
+	};
+	const testDataUser = {
+		email: 'user@gmail.com',
+		password: 'test',
+		name: 'Jill Doe'
+	};
 	const testDataUserUpdated = {
 		email: 'user@yandex.ru',
-		password: 'new-test'
+		password: 'new-test',
+		name: 'Peter Doe'
 	};
 	const deleteDataRight = { ids: [] };
 	const deleteDataFailed = { ids: [1, 2] };
 
 	let token;
 	let newUserId;
+	let newUserToken;
 
 	beforeEach(async () => {
 		app = await testNestApplication();
@@ -72,15 +82,15 @@ describe('UserController & AuthController (e2e)', () => {
 			.expect(201)
 			.then(({ body }: request.Response) => {
 				expect(body.token).toBeDefined();
-				token = body.token;
+				newUserToken = body.token;
 			});
 	});
 
 	it('/api/user/auth/whois (POST) - for user', () => {
 		return request(app.getHttpServer())
 			.post('/user/auth/whois')
-			.set('Authorization', `Bearer ${token}`)
-			.send({ token })
+			.set('Authorization', `Bearer ${newUserToken}`)
+			.send({ token: newUserToken })
 			.expect(200)
 			.then(({ body }: request.Response) => {
 				expect(body.id).toBeDefined();
@@ -88,22 +98,44 @@ describe('UserController & AuthController (e2e)', () => {
 			});
 	});
 
-	it('/api/user (GET)', () => {
+	it('/api/user (GET) - success', () => {
 		return request(app.getHttpServer())
-			.get('/user')
-			.set('Authorization', `Bearer ${token}`)
+			.get('/user?page=0')
+			.set('Authorization', `Bearer ${newUserToken}`)
 			.expect(200)
 			.then(({ body }: request.Response) => {
 				expect(body).toBeDefined();
-				expect(body.length).toBe(3);
-				expect(body[0].id).toBe(1);
+				expect(body.list).toBeDefined();
+				expect(body.list.length).toBeGreaterThan(0);
+				expect(body.list[0].id).toBe(1);
 			});
+	});
+
+	it('/api/user (GET) - bad request: string page number', () => {
+		return request(app.getHttpServer())
+			.get('/user?page=a')
+			.set('Authorization', `Bearer ${newUserToken}`)
+			.expect(400);
+	});
+
+	it('/api/user (GET) - bad request: float page number', () => {
+		return request(app.getHttpServer())
+			.get('/user?page=0.5')
+			.set('Authorization', `Bearer ${newUserToken}`)
+			.expect(400);
+	});
+
+	it('/api/user (GET) - bad request: negative page number', () => {
+		return request(app.getHttpServer())
+			.get('/user?page=-1')
+			.set('Authorization', `Bearer ${newUserToken}`)
+			.expect(400);
 	});
 
 	it('/api/user/roles (GET)', () => {
 		return request(app.getHttpServer())
 			.get('/user/roles')
-			.set('Authorization', `Bearer ${token}`)
+			.set('Authorization', `Bearer ${newUserToken}`)
 			.expect(200)
 			.then(({ body }: request.Response) => {
 				expect(body).toBeDefined();
@@ -114,7 +146,7 @@ describe('UserController & AuthController (e2e)', () => {
 	it('/api/user/{id} (GET) - success', () => {
 		return request(app.getHttpServer())
 			.get(`/user/${newUserId}`)
-			.set('Authorization', `Bearer ${token}`)
+			.set('Authorization', `Bearer ${newUserToken}`)
 			.expect(200)
 			.then(({ body }: request.Response) => {
 				expect(body).toBeDefined();
@@ -125,14 +157,14 @@ describe('UserController & AuthController (e2e)', () => {
 	it('/api/user/{id} (GET) - failed', () => {
 		return request(app.getHttpServer())
 			.get('/user/100')
-			.set('Authorization', `Bearer ${token}`)
+			.set('Authorization', `Bearer ${newUserToken}`)
 			.expect(404);
 	});
 
 	it('/api/user/{id}/edit (GET) - success', () => {
 		return request(app.getHttpServer())
 			.get(`/user/${newUserId}/edit`)
-			.set('Authorization', `Bearer ${token}`)
+			.set('Authorization', `Bearer ${newUserToken}`)
 			.expect(200)
 			.then(({ body }: request.Response) => {
 				expect(body).toBeDefined();
@@ -143,14 +175,14 @@ describe('UserController & AuthController (e2e)', () => {
 	it('/api/user/{id}/edit (GET) - failed', () => {
 		return request(app.getHttpServer())
 			.get('/user/1/edit')
-			.set('Authorization', `Bearer ${token}`)
+			.set('Authorization', `Bearer ${newUserToken}`)
 			.expect(403);
 	});
 
 	it('/api/user/{id} (PUT) - success', () => {
 		return request(app.getHttpServer())
 			.put(`/user/${newUserId}`)
-			.set('Authorization', `Bearer ${token}`)
+			.set('Authorization', `Bearer ${newUserToken}`)
 			.send(testDataUserUpdated)
 			.expect(200)
 			.then(({ body }: request.Response) => {
@@ -162,7 +194,7 @@ describe('UserController & AuthController (e2e)', () => {
 	it('/api/user/{id} (PUT) - failed', () => {
 		return request(app.getHttpServer())
 			.put('/user/1')
-			.set('Authorization', `Bearer ${token}`)
+			.set('Authorization', `Bearer ${newUserToken}`)
 			.send(testDataUserUpdated)
 			.expect(403);
 	});
@@ -172,7 +204,7 @@ describe('UserController & AuthController (e2e)', () => {
 
 		return request(app.getHttpServer())
 			.delete('/user')
-			.set('Authorization', `Bearer ${token}`)
+			.set('Authorization', `Bearer ${newUserToken}`)
 			.send(deleteDataRight)
 			.expect(204);
 	});
@@ -182,7 +214,7 @@ describe('UserController & AuthController (e2e)', () => {
 
 		return request(app.getHttpServer())
 			.delete('/user')
-			.set('Authorization', `Bearer ${token}`)
+			.set('Authorization', `Bearer ${newUserToken}`)
 			.send(deleteDataFailed)
 			.expect(403);
 	});

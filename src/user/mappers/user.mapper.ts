@@ -27,7 +27,7 @@ export class UserMapper {
 	 * @returns DTO списка
 	 */
 	public toItemDto(entity: User): UserItemDto {
-		return new UserItemDto(entity.id, entity.email);
+		return new UserItemDto(entity.id, entity.email, entity.name);
 	}
 
 	/**
@@ -36,7 +36,12 @@ export class UserMapper {
 	 * @returns DTO карточки
 	 */
 	public toCardDto(entity: User): UserCardDto {
-		return new UserCardDto(entity.id, entity.email, entity.role);
+		return new UserCardDto(
+			entity.id,
+			entity.email,
+			entity.name,
+			entity.role
+		);
 	}
 
 	/**
@@ -47,7 +52,8 @@ export class UserMapper {
 	public toUpdateDto(entity: User): UserUpdateDto {
 		return new UserUpdateDto(
 			entity.email,
-			this.passwordService.decrypt(entity.password)
+			this.passwordService.decrypt(entity.password),
+			entity.name
 		);
 	}
 
@@ -61,6 +67,7 @@ export class UserMapper {
 		return new User(
 			dto.email,
 			this.passwordService.encrypt(dto.password),
+			dto.name,
 			role
 		);
 	}
@@ -76,6 +83,7 @@ export class UserMapper {
 
 		entity.email = dto.email;
 		entity.password = this.passwordService.encrypt(dto.password);
+		entity.name = dto.name;
 
 		return entity;
 	}

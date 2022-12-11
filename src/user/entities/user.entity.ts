@@ -20,9 +20,22 @@ export enum UserRoles {
  */
 @Entity('user', { schema: PostgresSchemas.USR })
 export class User {
-	constructor(email: string, password: string, role?: UserRoles) {
+	/**
+	 * Сущность - пользователь
+	 * @param email Email
+	 * @param password Пароль
+	 * @param name Имя пользователя
+	 * @param role Роль
+	 */
+	constructor(
+		email: string,
+		password: string,
+		name: string,
+		role?: UserRoles
+	) {
 		this.email = email;
 		this.password = password;
+		this.name = name;
 
 		if (role) {
 			this.role = role;
@@ -52,4 +65,10 @@ export class User {
 	 */
 	@Column({ type: 'varchar', length: 32 })
 	role: UserRoles;
+
+	/**
+	 * Имя пользователя
+	 */
+	@Column({ type: 'varchar', length: 300 })
+	name: string;
 }

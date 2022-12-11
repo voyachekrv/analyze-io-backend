@@ -3,6 +3,9 @@ import { DataSource, DataSourceOptions } from 'typeorm';
 
 config({ path: '.env.test' });
 
+/**
+ * Опции подключения к тестовой базе данных
+ */
 export const testDataSourceOptions: DataSourceOptions = {
 	type: 'postgres',
 	host: process.env.POSTGRES_HOST,
@@ -17,6 +20,9 @@ export const testDataSourceOptions: DataSourceOptions = {
 	cache: false
 };
 
+/**
+ * Подключение к тестовой базе данных
+ */
 const testDataSource: DataSource = new DataSource(testDataSourceOptions);
 
 export default testDataSource;

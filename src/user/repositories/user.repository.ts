@@ -1,9 +1,14 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { Page } from '../../utils/page';
 import { Repository } from 'typeorm';
 import { format } from 'util';
 import { User } from '../entities/user.entity';
 import { UserStrings } from '../user.strings';
+import {
+	UserPaginator,
+	UserSearchConditions
+} from '../paginators/user.paginator';
 
 /**
  * Репозиторий для сущности "Пользователь"
@@ -21,8 +26,19 @@ export class UserRepository extends Repository<User> {
 	 * Получение всех экземпляров сущности "Пользователь"
 	 * @returns Список пользователей
 	 */
-	public async findAll(): Promise<User[]> {
-		return await this.createQueryBuilder('user').getMany();
+	public async findAll(page: number): Promise<Page<User>> {
+		return new Page(
+			await new UserPaginator<User, UserSearchConditions>().paginateQuery(
+				this.createQueryBuilder('user'),
+				{
+					page,
+					orderBy: {
+						field: 'id',
+						direction: 'ASC'
+					}
+				}
+			)
+		);
 	}
 
 	/**
