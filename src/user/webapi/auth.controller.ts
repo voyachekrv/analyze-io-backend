@@ -3,6 +3,7 @@ import {
 	Controller,
 	HttpCode,
 	Post,
+	Req,
 	UseGuards,
 	UsePipes,
 	ValidationPipe
@@ -13,6 +14,7 @@ import {
 	ApiResponse,
 	ApiTags
 } from '@nestjs/swagger';
+import { Request } from 'express';
 import { Roles } from '../decorators/roles-auth.decorator';
 import { TokenInfoDto } from '../dto/token-info.dto';
 import { TokenDto } from '../dto/token.dto';
@@ -21,7 +23,6 @@ import { UserSignInDto } from '../dto/user.sign-in.dto';
 import { UserRoles } from '../entities/user.entity';
 import { RolesGuard } from '../guards/roles.guard';
 import { AuthService } from '../services/auth.service';
-import { UserVerifyService } from '../services/user-verify.service';
 
 /**
  * Контроллер авторизации пользователя
@@ -35,10 +36,7 @@ export class AuthController {
 	 * @param authService Сервис авторизации пользователя
 	 * @param userVerifyService Сервис верификации пользователя
 	 */
-	constructor(
-		private readonly authService: AuthService,
-		private readonly userVerifyService: UserVerifyService
-	) {}
+	constructor(private readonly authService: AuthService) {}
 
 	/**
 	 * Авторизация пользователя
@@ -117,7 +115,11 @@ export class AuthController {
 		status: 403,
 		description: 'Forbidden'
 	})
-	public whois(@Body() dto: TokenDto): TokenInfoDto {
-		return this.userVerifyService.verifyUser(dto.token);
+	public whois(@Req() request: Request): TokenInfoDto {
+		return new TokenInfoDto(
+			request['user'].id,
+			request['user'].email,
+			request['user'].role
+		);
 	}
 }

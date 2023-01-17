@@ -4,6 +4,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserModule } from './user/user.module';
 import { config } from 'dotenv';
 import { dataSourceOptions } from './db/data-source';
+import { CommerceModule } from './commerce/commerce.module';
 
 config();
 
@@ -13,7 +14,8 @@ config();
 			envFilePath: '.env'
 		}),
 		TypeOrmModule.forRoot(dataSourceOptions),
-		UserModule
+		UserModule,
+		CommerceModule
 	]
 })
 export class AppModule {}

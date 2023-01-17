@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { DeleteDto } from '../../utils/delete.dto';
 import { Page } from '../../utils/page';
 import { UserCardDto } from '../dto/user.card.dto';
@@ -18,9 +18,7 @@ export class UserService {
 	/**
 	 * Сервис для работы с пользователями
 	 * @param userRepository Репозиторий сущности "Пользователь"
-	 * @param jwtService JWT-сервис
 	 * @param userMapper Маппер сущности "Пользователь"
-	 * @param userVerifyService Сервис верификации пользователя
 	 */
 	constructor(
 		private readonly userRepository: UserRepository,
@@ -32,14 +30,18 @@ export class UserService {
 	 * @returns Возможные роли пользователя
 	 */
 	public getRoles(): UserRolesDto {
+		Logger.log('getting roles', this.constructor.name);
 		return new UserRolesDto(Object.values(UserRoles));
 	}
 
 	/**
 	 * Поиск всех пользователей
+	 * @param page Номер страницы
 	 * @returns Список экземпляров DTO списка
 	 */
 	public async findAll(page: number): Promise<Page<UserItemDto>> {
+		Logger.log(`finding all users, page: ${page}`, this.constructor.name);
+
 		return (await this.userRepository.findAll(page)).map(
 			this.userMapper.toItemDto
 		) as Page<UserItemDto>;
@@ -51,6 +53,8 @@ export class UserService {
 	 * @returns Карточка пользователя
 	 */
 	public async findById(id: number): Promise<UserCardDto> {
+		Logger.log(`finding user by id, id: ${id}`, this.constructor.name);
+
 		return this.userMapper.toCardDto(
 			await this.userRepository.findOneOr404(id)
 		);
@@ -62,6 +66,11 @@ export class UserService {
 	 * @returns DTO обновления
 	 */
 	public async findForUpdate(id: number): Promise<UserUpdateDto> {
+		Logger.log(
+			`finding user by id for update, id: ${id}`,
+			this.constructor.name
+		);
+
 		return this.userMapper.toUpdateDto(
 			await this.userRepository.findOneOr404(id)
 		);
@@ -73,6 +82,11 @@ export class UserService {
 	 * @returns Найденная сущность
 	 */
 	public async findByEmail(email: string): Promise<User> {
+		Logger.log(
+			`finding user by email, email: ${email}`,
+			this.constructor.name
+		);
+
 		return await this.userRepository.findByEmail(email);
 	}
 
@@ -83,6 +97,11 @@ export class UserService {
 	 * @returns Созаднный пользователь
 	 */
 	public async create(dto: UserCreateDto, role: UserRoles): Promise<User> {
+		Logger.log(
+			`create user, email: ${dto.email}, name: ${dto.name}, role: ${role}`,
+			this.constructor.name
+		);
+
 		return await this.userRepository.save(
 			this.userMapper.create(dto, role)
 		);
@@ -98,6 +117,11 @@ export class UserService {
 		id: number,
 		dto: UserUpdateDto
 	): Promise<UserUpdateDto> {
+		Logger.log(
+			`update user, id: ${id}, email: ${dto.email}, name: ${dto.name}`,
+			this.constructor.name
+		);
+
 		return this.userMapper.toUpdateDto(
 			await this.userRepository.save(
 				await this.userMapper.update(dto, id)
@@ -110,6 +134,11 @@ export class UserService {
 	 * @param dto ID сущностей для удаления
 	 */
 	public async remove(dto: DeleteDto): Promise<void> {
+		Logger.log(
+			`delete users, ids: ${dto.ids.join(', ')}`,
+			this.constructor.name
+		);
+
 		await this.userRepository.deleteByIds(dto.ids);
 	}
 }

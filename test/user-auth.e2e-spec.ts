@@ -60,8 +60,11 @@ describe('UserController & AuthController (e2e)', () => {
 		return request(app.getHttpServer())
 			.post('/user/auth/whois')
 			.set('Authorization', `Bearer ${token}`)
-			.send({ token })
-			.expect(200);
+			.expect(200)
+			.then(({ body }: request.Response) => {
+				expect(body).toBeDefined();
+				expect(body.id).toBe(1);
+			});
 	});
 
 	it('/api/user (POST)', () => {

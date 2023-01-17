@@ -10,6 +10,12 @@
 		"sourceMap": true,
 		"outDir": "./dist",
 		"baseUrl": "./",
+		"paths": {
+			"@user/*": ["src/user/*"],
+			"@commerce/*": ["src/commerce/*"],
+			"@db/*": ["src/db/*"],
+			"@utils/*":  ["src/utils/*"],
+		},
 		"incremental": true,
 		"skipLibCheck": true,
 		"strictNullChecks": false,

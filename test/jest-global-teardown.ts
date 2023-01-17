@@ -18,6 +18,8 @@ const jestGlobalTeardown = async () => {
 		console.error('idle client error', err.message, err.stack);
 	});
 
+	await pool.query('DROP TABLE "commerce"."shop"');
+	await pool.query('drop schema commerce;');
 	await pool.query('drop table usr."user"');
 	await pool.query('drop schema usr');
 	await pool.query('drop table public.migrations');

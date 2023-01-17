@@ -52,7 +52,6 @@ describe('UserController & AuthController (root-user) (e2e)', () => {
 		return request(app.getHttpServer())
 			.post('/user/auth/whois')
 			.set('Authorization', `Bearer ${newUserToken}`)
-			.send({ token: newUserToken })
 			.expect(200)
 			.then(({ body }: request.Response) => {
 				expect(body.id).toBeDefined();

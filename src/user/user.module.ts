@@ -7,7 +7,6 @@ import { UserController } from './webapi/user.controller';
 import { AuthService } from './services/auth.service';
 import { UserService } from './services/user.service';
 import { UserMapper } from './mappers/user.mapper';
-import { UserVerifyService } from './services/user-verify.service';
 import { PasswordService } from './services/password.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
@@ -36,10 +35,9 @@ const jwtConfig = (configService: ConfigService): JwtModuleOptions => {
 		AuthService,
 		UserService,
 		UserMapper,
-		UserVerifyService,
 		UserRepository,
 		PasswordService
 	],
-	exports: [UserVerifyService]
+	exports: [JwtModule, UserRepository]
 })
 export class UserModule {}
