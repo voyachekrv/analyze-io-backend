@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { TokenDto } from '../dto/token.dto';
 import { UserCreateDto } from '../dto/user.create.dto';
@@ -31,6 +31,10 @@ export class AuthService {
 	 * @returns Bearer-токен
 	 */
 	public async login(dto: UserSignInDto): Promise<TokenDto> {
+		Logger.log(
+			`login, dto: {email: ${dto.email}, password: ${dto.password}}`,
+			this.constructor.name
+		);
 		return this.generateToken(await this.validateUser(dto));
 	}
 
@@ -42,6 +46,11 @@ export class AuthService {
 	public async register(dto: UserCreateDto): Promise<TokenDto> {
 		const user = await this.userService.create(dto, UserRoles.USER);
 
+		Logger.log(
+			`registered user, id: ${user.id}, role: ${user.role}`,
+			this.constructor.name
+		);
+
 		return this.generateToken(user);
 	}
 
@@ -51,6 +60,11 @@ export class AuthService {
 	 * @returns DTO Bearer-токена
 	 */
 	private generateToken(user: User): TokenDto {
+		Logger.log(
+			`token generation, id: ${user.id}, role: ${user.role}, ${user.email}`,
+			this.constructor.name
+		);
+
 		return {
 			token: this.jwtService.sign({
 				email: user.email,

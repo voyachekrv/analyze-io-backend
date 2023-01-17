@@ -1,3 +1,4 @@
+import { ShopService } from '../services/shop.service';
 import {
 	BadRequestException,
 	Body,
@@ -6,12 +7,13 @@ import {
 	Get,
 	HttpCode,
 	Param,
-	Put,
 	Post,
+	Put,
+	Query,
+	Req,
 	UseGuards,
 	UsePipes,
-	ValidationPipe,
-	Query
+	ValidationPipe
 } from '@nestjs/common';
 import {
 	ApiBearerAuth,
@@ -19,45 +21,36 @@ import {
 	ApiResponse,
 	ApiTags
 } from '@nestjs/swagger';
+import { Request } from 'express';
+import { Roles } from '../../user/decorators/roles-auth.decorator';
+import { UserRoles } from '../../user/entities/user.entity';
+import { RolesGuard } from '../../user/guards/roles.guard';
+import { ValidateQueryParamGuard } from '../../user/guards/validate-query-param.guard';
 import { Page } from '../../utils/page';
+import { ShopItemDto } from '../dto/shop.item.dto';
+import { ShopCardDto } from '../dto/shop.card.dto';
+import { ShopUpdateDto } from '../dto/shop.update.dto';
 import { CreationResultDto } from '../../utils/creation-result.dto';
+import { ShopCreateDto } from '../dto/shop.create.dto';
 import { DeleteDto } from '../../utils/delete.dto';
-import { Roles } from '../decorators/roles-auth.decorator';
-import { UserCardDto } from '../dto/user.card.dto';
-import { UserCreateDto } from '../dto/user.create.dto';
-import { UserItemDto } from '../dto/user.item.dto';
-import { UserRolesDto } from '../dto/user.roles.dto';
-import { UserUpdateDto } from '../dto/user.update.dto';
-import { UserRoles } from '../entities/user.entity';
-import { OnlyOwnerDeleteGuard } from '../guards/only-owner-delete.guard';
-import { OnlyOwnerGetForUpdateGuard } from '../guards/only-owner-get-for-update.guard';
-import { OnlyOwnerGuard } from '../guards/only-owner.guard';
-import { RolesGuard } from '../guards/roles.guard';
-import { UserService } from '../services/user.service';
-import { ValidateQueryParamGuard } from '../guards/validate-query-param.guard';
 
-/**
- * Контроллер для работы с пользователями
- */
-@Controller('user')
-@ApiTags('Работа с пользователями')
+@Controller('shop')
+@ApiTags('Интернет-магазины пользователя')
 @ApiBearerAuth()
-export class UserController {
-	/**
-	 * Контроллер для работы с пользователями
-	 * @param userService Сервис для работы с пользователями
-	 */
-	constructor(private readonly userService: UserService) {}
+export class ShopController {
+	constructor(private readonly shopService: ShopService) {}
 
 	/**
-	 * Получение всех пользователей
-	 * @returns Список пользователей
+	 * Получение всех магазинов
+	 * @param request HTTP-request
+	 * @param page Номер страницы
+	 * @returns Страница со списком магазинов
 	 */
 	@Get()
 	@UseGuards(RolesGuard, ValidateQueryParamGuard)
 	@Roles(UserRoles.USER, UserRoles.ROOT)
 	@ApiOperation({
-		summary: 'Получение списка пользователей'
+		summary: 'Получение списка магазинов'
 	})
 	@ApiResponse({
 		schema: {
@@ -69,8 +62,7 @@ export class UserController {
 						type: 'object',
 						properties: {
 							id: { type: 'number', example: 1 },
-							email: { type: 'string', example: 'john@doe.com' },
-							name: { type: 'string', example: 'Jonh Doe' }
+							name: { type: 'string', example: 'Aliexpress' }
 						}
 					}
 				},
@@ -99,38 +91,15 @@ export class UserController {
 		status: 404,
 		description: 'В случае обращения к несуществующему номеру страницы'
 	})
-	// TODO: Сделать параметры для поиска и order by
-	public async index(
+	public index(
+		@Req() request: Request,
 		@Query('page') page: number
-	): Promise<Page<UserItemDto>> {
-		return await this.userService.findAll(Number(page));
+	): Promise<Page<ShopItemDto>> {
+		return this.shopService.findAll(request['user']['id'], page);
 	}
 
 	/**
-	 * Получение списка всех доступных ролей в системе
-	 * @returns Возможные роли пользователя
-	 */
-	@Get('roles')
-	@UseGuards(RolesGuard)
-	@Roles(UserRoles.USER, UserRoles.ROOT)
-	@ApiOperation({
-		summary: 'Получение списка доступных ролей пользователя'
-	})
-	@ApiResponse({
-		type: UserRolesDto,
-		description: 'Список ролей, которые могут быть у пользователя',
-		status: 200
-	})
-	@ApiResponse({
-		status: 403,
-		description: 'Forbidden'
-	})
-	public getRoles(): UserRolesDto {
-		return this.userService.getRoles();
-	}
-
-	/**
-	 * Получение карточки пользователя
+	 * Получение карточки магазина
 	 * @param id ID пользователя
 	 * @returns Карточка пользователя
 	 */
@@ -141,8 +110,8 @@ export class UserController {
 		summary: 'Получение карточки пользователя по его ID'
 	})
 	@ApiResponse({
-		type: UserCardDto,
-		description: 'Карточка пользователя',
+		type: ShopCardDto,
+		description: 'Карточка магазина',
 		status: 200
 	})
 	@ApiResponse({
@@ -157,9 +126,15 @@ export class UserController {
 		status: 404,
 		description: 'Not found'
 	})
-	public async getCard(@Param('id') id: number): Promise<UserCardDto> {
+	public async getCard(
+		@Req() request: Request,
+		@Param('id') id: number
+	): Promise<ShopCardDto> {
 		if (!isNaN(Number(id))) {
-			return await this.userService.findById(Number(id));
+			return await this.shopService.findById(
+				request['user']['id'],
+				Number(id)
+			);
 		}
 		throw new BadRequestException();
 	}
@@ -171,14 +146,14 @@ export class UserController {
 	 * @returns DTO обновления
 	 */
 	@Get(':id/edit')
-	@UseGuards(RolesGuard, OnlyOwnerGetForUpdateGuard)
+	@UseGuards(RolesGuard)
 	@Roles(UserRoles.USER, UserRoles.ROOT)
 	@ApiOperation({
-		summary: 'Получение информации для обновления пользователя'
+		summary: 'Получение информации для обновления магазина'
 	})
 	@ApiResponse({
-		type: UserUpdateDto,
-		description: 'DTO обновления пользователя',
+		type: ShopUpdateDto,
+		description: 'DTO обновления магазина',
 		status: 200
 	})
 	@ApiResponse({
@@ -194,10 +169,14 @@ export class UserController {
 		description: 'Not found'
 	})
 	public async findForUpdate(
+		@Req() request: Request,
 		@Param('id') id: number
-	): Promise<UserUpdateDto> {
+	): Promise<ShopUpdateDto> {
 		if (!isNaN(Number(id))) {
-			return await this.userService.findForUpdate(Number(id));
+			return await this.shopService.findForUpdate(
+				request['user']['id'],
+				Number(id)
+			);
 		}
 		throw new BadRequestException();
 	}
@@ -209,14 +188,13 @@ export class UserController {
 	 */
 	@Post()
 	@UseGuards(RolesGuard)
-	@Roles(UserRoles.ROOT)
+	@Roles(UserRoles.USER, UserRoles.ROOT)
 	@UsePipes(new ValidationPipe())
 	@ApiOperation({
-		summary:
-			'Создание суперпользователя (только для других суперпользователей)'
+		summary: 'Создание магазина'
 	})
 	@ApiResponse({
-		description: 'ID созданного суперпользователя',
+		description: 'ID созданного магазина',
 		status: 201,
 		type: CreationResultDto
 	})
@@ -229,30 +207,31 @@ export class UserController {
 		description: 'Forbidden'
 	})
 	public async create(
-		@Body() dto: UserCreateDto
+		@Req() request: Request,
+		@Body() dto: ShopCreateDto
 	): Promise<CreationResultDto> {
 		return new CreationResultDto(
-			(await this.userService.create(dto, UserRoles.ROOT)).id
+			(await this.shopService.create(request['user']['id'], dto)).id
 		);
 	}
 
 	/**
-	 * Обвновление пользователя
-	 * @param id ID пользователя
+	 * Обвновление магазина
+	 * @param id ID магазина
 	 * @param req HTTP Request
 	 * @param dto DTO обновления
 	 * @returns ID обновленной сущности
 	 */
 	@Put(':id')
 	@UsePipes(new ValidationPipe())
-	@UseGuards(RolesGuard, OnlyOwnerGuard)
+	@UseGuards(RolesGuard)
 	@Roles(UserRoles.USER, UserRoles.ROOT)
 	@ApiOperation({
-		summary: 'Обновление данных о пользователе'
+		summary: 'Обновление данных о магазине'
 	})
 	@ApiResponse({
-		type: UserUpdateDto,
-		description: 'ID обновленнного пользователя',
+		type: ShopUpdateDto,
+		description: 'ID обновленнного магазина',
 		status: 200
 	})
 	@ApiResponse({
@@ -268,27 +247,28 @@ export class UserController {
 		description: 'Not found'
 	})
 	public async update(
+		@Req() request: Request,
 		@Param('id') id: number,
-		@Body() dto: UserUpdateDto
-	): Promise<UserUpdateDto> {
-		return await this.userService.update(id, dto);
+		@Body() dto: ShopUpdateDto
+	): Promise<ShopUpdateDto> {
+		return await this.shopService.update(request['user']['id'], id, dto);
 	}
 
 	/**
-	 * Удаление пользователей
+	 * Удаление магазинов
 	 * @param req HTTP Request
 	 * @param dto DTO удаления
 	 */
 	@Delete()
 	@HttpCode(204)
 	@UsePipes(new ValidationPipe())
-	@UseGuards(RolesGuard, OnlyOwnerDeleteGuard)
+	@UseGuards(RolesGuard)
 	@Roles(UserRoles.USER, UserRoles.ROOT)
 	@ApiOperation({
-		summary: 'Удаление пользователей'
+		summary: 'Удаление магазинов'
 	})
 	@ApiResponse({
-		description: 'Пользователи были удалены',
+		description: 'Магазиноы были удалены',
 		status: 204
 	})
 	@ApiResponse({
@@ -303,7 +283,10 @@ export class UserController {
 		status: 404,
 		description: 'Not found'
 	})
-	public async remove(@Body() dto: DeleteDto): Promise<void> {
-		await this.userService.remove(dto);
+	public async remove(
+		@Req() request: Request,
+		@Body() dto: DeleteDto
+	): Promise<void> {
+		await this.shopService.remove(request['user']['id'], dto);
 	}
 }

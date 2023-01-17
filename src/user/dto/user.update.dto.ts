@@ -10,10 +10,12 @@ export class UserUpdateDto {
 	 * Информация для изменения пользователя
 	 * @param email Email
 	 * @param password Пароль
+	 * @param name Имя пользователя
 	 */
-	constructor(email: string, password: string) {
+	constructor(email: string, password: string, name: string) {
 		this.email = email;
 		this.password = password;
+		this.name = name;
 	}
 
 	/**
@@ -38,4 +40,17 @@ export class UserUpdateDto {
 	@IsNotEmpty({ message: UserStrings.SHOULD_BE_NOT_EMPTY })
 	@MaxLength(200)
 	password: string;
+
+	/**
+	 * Имя пользователя
+	 */
+	@ApiProperty({
+		description: 'Имя пользователя',
+		example: 'John Doe',
+		maxLength: 300
+	})
+	@IsString({ message: UserStrings.SHOULD_BE_STRING })
+	@IsNotEmpty({ message: UserStrings.SHOULD_BE_NOT_EMPTY })
+	@MaxLength(300)
+	name: string;
 }

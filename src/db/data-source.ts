@@ -3,6 +3,9 @@ import { config } from 'dotenv';
 
 config();
 
+/**
+ * Опции подключения к базе данных
+ */
 export const dataSourceOptions: DataSourceOptions = {
 	type: 'postgres',
 	host: process.env.POSTGRES_HOST,
@@ -17,6 +20,9 @@ export const dataSourceOptions: DataSourceOptions = {
 	cache: false
 };
 
+/**
+ * Подключение к базе данных
+ */
 const dataSource: DataSource = new DataSource(dataSourceOptions);
 
 export default dataSource;

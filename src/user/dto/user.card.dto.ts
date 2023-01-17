@@ -9,11 +9,13 @@ export class UserCardDto {
 	 * Информация для отображения карточки пользователя
 	 * @param id ID пользователя
 	 * @param email Email
+	 * @param name Имя пользователя
 	 * @param role Роль
 	 */
-	constructor(id: number, email: string, role: UserRoles) {
+	constructor(id: number, email: string, name: string, role: UserRoles) {
 		this.id = id;
 		this.email = email;
+		this.name = name;
 		this.role = role;
 	}
 
@@ -28,6 +30,12 @@ export class UserCardDto {
 	 */
 	@ApiProperty({ description: 'Email пользователя', example: 'john@doe.com' })
 	email: string;
+
+	/**
+	 * Имя пользователя
+	 */
+	@ApiProperty({ description: 'Имя пользователя', example: 'John Doe' })
+	name: string;
 
 	/**
 	 * Роль

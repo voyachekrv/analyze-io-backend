@@ -2,5 +2,6 @@
  *  Схемы базы даннх
  */
 export enum PostgresSchemas {
-	USR = 'usr'
+	USR = 'usr',
+	COMMERCE = 'commerce'
 }

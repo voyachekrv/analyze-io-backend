@@ -32,4 +32,17 @@ export class UserCreateDto {
 	@IsNotEmpty({ message: UserStrings.SHOULD_BE_NOT_EMPTY })
 	@MaxLength(200)
 	password: string;
+
+	/**
+	 * Имя пользователя
+	 */
+	@ApiProperty({
+		description: 'Имя пользователя',
+		example: 'John Doe',
+		maxLength: 300
+	})
+	@IsString({ message: UserStrings.SHOULD_BE_STRING })
+	@IsNotEmpty({ message: UserStrings.SHOULD_BE_NOT_EMPTY })
+	@MaxLength(300)
+	name: string;
 }
