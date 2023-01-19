@@ -4,7 +4,7 @@ import { testNestApplicationCommerce } from './test-prepared';
 import { ShopCreateDto } from '@commerce/dto/shop.create.dto';
 import { ShopUpdateDto } from '@commerce/dto/shop.update.dto';
 
-describe('ShopController (e2e)', () => {
+describe('ShopController & ResourceController (e2e)', () => {
 	let app: INestApplication;
 
 	let userToken;
@@ -23,6 +23,8 @@ describe('ShopController (e2e)', () => {
 	};
 
 	let shopId: number;
+
+	let shopUUID: string;
 
 	const deleteData = { ids: [] };
 
@@ -79,6 +81,8 @@ describe('ShopController (e2e)', () => {
 				expect(body.uuid).toBeDefined();
 				expect(body.uuid.length).toBeDefined();
 				expect(body.uuid.length).toBeGreaterThan(0);
+
+				shopUUID = body.uuid;
 			});
 	});
 
@@ -102,6 +106,26 @@ describe('ShopController (e2e)', () => {
 			.then(({ body }: request.Response) => {
 				expect(body).toBeDefined();
 				expect(body.name).toBe(updateDto.name);
+			});
+	});
+
+	it('/api/resource/monitor/connection-string/{uuid} (GET) - success', () => {
+		return request(app.getHttpServer())
+			.get(`/resource/monitor/connection-string/${shopUUID}`)
+			.set('Authorization', `Bearer ${userToken}`)
+			.expect(200)
+			.then(({ body }: request.Response) => {
+				expect(body).toBeDefined();
+				expect(body.connectionString).toBeDefined();
+			});
+	});
+
+	it('/api/resource/monitor/monitor.js', () => {
+		return request(app.getHttpServer())
+			.get('/resource/monitor/monitor.js')
+			.expect(200)
+			.then(({ body }: request.Response) => {
+				expect(body).toBeDefined();
 			});
 	});
 

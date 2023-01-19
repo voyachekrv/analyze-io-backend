@@ -5,6 +5,7 @@ import { UserModule } from './user/user.module';
 import { config } from 'dotenv';
 import { dataSourceOptions } from './db/data-source';
 import { CommerceModule } from './commerce/commerce.module';
+import { ResourceModule } from './resource/resource.module';
 
 config();
 
@@ -15,7 +16,8 @@ config();
 		}),
 		TypeOrmModule.forRoot(dataSourceOptions),
 		UserModule,
-		CommerceModule
+		CommerceModule,
+		ResourceModule
 	]
 })
 export class AppModule {}

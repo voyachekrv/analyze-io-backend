@@ -10,6 +10,7 @@ import { ShopMapper } from './mappers/shop.mapper';
 @Module({
 	imports: [UserModule, TypeOrmModule.forFeature([Shop])],
 	controllers: [ShopController],
-	providers: [ShopRepository, ShopService, ShopMapper]
+	providers: [ShopRepository, ShopService, ShopMapper],
+	exports: [ShopService]
 })
 export class CommerceModule {}

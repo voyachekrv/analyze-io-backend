@@ -1,3 +1,5 @@
+#TODO: Сделать перед стартом compose команду sudo setfacl --modify user:$USER:rw /var/run/docker.sock
+
 version: "3.9"
 services:
   postgres:

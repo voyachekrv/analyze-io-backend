@@ -107,7 +107,7 @@ export class ShopController {
 	@UseGuards(RolesGuard)
 	@Roles(UserRoles.USER, UserRoles.ROOT)
 	@ApiOperation({
-		summary: 'Получение карточки пользователя по его ID'
+		summary: 'Получение карточки магазина по его ID'
 	})
 	@ApiResponse({
 		type: ShopCardDto,

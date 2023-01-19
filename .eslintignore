@@ -1,1 +1,7 @@
 ./resources/*
+./pgadmin
+./pgadmin/*
+./pgadmin/sessions/*
+./pgdata
+./pgdata/*
+./pgdata/**/*
