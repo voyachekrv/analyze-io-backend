@@ -43,7 +43,7 @@ export class ShopService {
 	 * Поиск магазина по его ID и ID владельца
 	 * @param userId ID пользователя
 	 * @param id ID магазина
-	 * @returns Карточка пользователя
+	 * @returns Карточка магазина
 	 */
 	public async findById(userId: number, id: number): Promise<ShopCardDto> {
 		Logger.log(
@@ -53,6 +53,26 @@ export class ShopService {
 
 		return this.shopMapper.toCardDto(
 			await this.shopRepository.findByIdAndUserId(userId, id)
+		);
+	}
+
+	/**
+	 * Поиск магазина пользователя по UUID
+	 * @param uuid UUID магазина
+	 * @param userId ID пользователя
+	 * @returns Карточка магазина
+	 */
+	public async findByUUID(
+		uuid: string,
+		userId: number
+	): Promise<ShopCardDto> {
+		Logger.log(
+			`finding shop by uuid, uuid: ${uuid}, userId: ${userId}`,
+			this.constructor.name
+		);
+
+		return this.shopMapper.toCardDto(
+			await this.shopRepository.findByUUID(uuid, userId)
 		);
 	}
 

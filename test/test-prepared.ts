@@ -5,6 +5,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserModule } from '../src/user/user.module';
 import { testDataSourceOptions } from '../src/db/test-data-source';
 import { CommerceModule } from '../src/commerce/commerce.module';
+import { ResourceModule } from '../src/resource/resource.module';
 
 export const testNestApplication = async (): Promise<INestApplication> => {
 	const dataSourceOptions = testDataSourceOptions;
@@ -35,7 +36,8 @@ export const testNestApplicationCommerce =
 				}),
 				TypeOrmModule.forRoot(dataSourceOptions),
 				UserModule,
-				CommerceModule
+				CommerceModule,
+				ResourceModule
 			]
 		}).compile();
 

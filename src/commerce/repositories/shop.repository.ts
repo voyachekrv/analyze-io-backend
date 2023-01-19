@@ -73,16 +73,53 @@ export class ShopRepository extends Repository<Shop> {
 	}
 
 	/**
+	 * Поиск магазина пользователя по UUID
+	 * @param uuid UUID магазина
+	 * @param userId ID пользователя
+	 * @returns Найденный магазин
+	 */
+	public async findByUUID(uuid: string, userId: number): Promise<Shop> {
+		const entity = await this.createQueryBuilder('shop')
+			.where('shop.user_id = :userId', { userId })
+			.andWhere({ uuid })
+			.getOne();
+
+		if (!entity) {
+			throw new NotFoundException(
+				format(
+					CommerceStrings.NOT_FOUND_SMTH,
+					CommerceStrings.SHOP_GENERATIVE,
+					uuid
+				)
+			);
+		}
+
+		return entity;
+	}
+
+	/**
 	 * Получение сущности "Магазин" по id и идентификатору пользователя
 	 * @param userId ID пользователя
 	 * @param id ID сущности
 	 * @returns Найденная сущность
 	 */
 	public async findByIdAndUserId(userId: number, id: number): Promise<Shop> {
-		return await this.createQueryBuilder('shop')
+		const entity = await this.createQueryBuilder('shop')
 			.where({ id })
 			.andWhere('shop.user_id = :userId', { userId })
 			.getOne();
+
+		if (!entity) {
+			throw new NotFoundException(
+				format(
+					CommerceStrings.NOT_FOUND_SMTH,
+					CommerceStrings.SHOP_GENERATIVE,
+					id
+				)
+			);
+		}
+
+		return entity;
 	}
 
 	/**
