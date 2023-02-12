@@ -1,6 +1,9 @@
 import { config } from 'dotenv';
 import * as PG from 'pg';
 
+/**
+ * Настройки, производящиеся после окончания процесса тестирования
+ */
 const jestGlobalTeardown = async () => {
 	config({ path: '.env.test' });
 

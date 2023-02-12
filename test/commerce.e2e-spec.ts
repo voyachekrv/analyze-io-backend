@@ -1,6 +1,6 @@
 import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
-import { testNestApplicationCommerce } from './test-prepared';
+import { testNestApplication } from './test-prepared';
 import { ShopCreateDto } from '@commerce/dto/shop.create.dto';
 import { ShopUpdateDto } from '@commerce/dto/shop.update.dto';
 
@@ -29,7 +29,7 @@ describe('ShopController & ResourceController (e2e)', () => {
 	const deleteData = { ids: [] };
 
 	beforeEach(async () => {
-		app = await testNestApplicationCommerce();
+		app = await testNestApplication();
 		await app.init();
 	});
 
