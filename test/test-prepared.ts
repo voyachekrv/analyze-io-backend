@@ -7,6 +7,10 @@ import { CommerceModule } from '../src/commerce/commerce.module';
 import { ResourceModule } from '../src/resource/resource.module';
 import { dataSourceTestFactory } from '../src/db/data-source-factory';
 
+/**
+ * Сборка тестового экземпляра приложения
+ * @returns Тестовый экземпляр приложения
+ */
 export const testNestApplication = async (): Promise<INestApplication> => {
 	const moduleFixture: TestingModule = await Test.createTestingModule({
 		imports: [
