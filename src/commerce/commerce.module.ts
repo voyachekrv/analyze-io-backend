@@ -7,6 +7,9 @@ import { ShopRepository } from './repositories/shop.repository';
 import { ShopService } from './services/shop.service';
 import { ShopMapper } from './mappers/shop.mapper';
 
+/**
+ * Модуль работы с коммерческими сущностями
+ */
 @Module({
 	imports: [UserModule, TypeOrmModule.forFeature([Shop])],
 	controllers: [ShopController],

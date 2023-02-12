@@ -6,6 +6,9 @@ import { CommerceModule } from './commerce/commerce.module';
 import { ResourceModule } from './resource/resource.module';
 import { dataSourceFactory } from './db/data-source-factory';
 
+/**
+ * Основной модуль приложения
+ */
 @Module({
 	imports: [
 		ConfigModule.forRoot({
