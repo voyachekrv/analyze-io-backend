@@ -1,3 +1,6 @@
+/**
+ * Строки для модуля Коммерции
+ */
 export enum CommerceStrings {
 	NOT_FOUND_SMTH = '%s с ID = %d не существует',
 	SHOULD_BE_STRING = 'Поле должно быть строкой',

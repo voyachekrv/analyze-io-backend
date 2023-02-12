@@ -1,38 +1,71 @@
 import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
-import { testNestApplicationCommerce } from './test-prepared';
+import { testNestApplication } from './test-prepared';
 import { ShopCreateDto } from '@commerce/dto/shop.create.dto';
 import { ShopUpdateDto } from '@commerce/dto/shop.update.dto';
 
+/**
+ * Тестирование контроллеров модуля коммерции и ресурсов
+ */
 describe('ShopController & ResourceController (e2e)', () => {
+	/**
+	 * Nest-приложение
+	 */
 	let app: INestApplication;
 
+	/**
+	 * Токен пользователя
+	 */
 	let userToken;
 
+	/**
+	 * Входные данные пользователя
+	 */
 	const userCredentials = {
 		email: 'testuser1@gmail.com',
 		password: 'test1'
 	};
 
+	/**
+	 * DTO создания магазина
+	 */
 	const createDto: ShopCreateDto = {
 		name: 'Aliexpress'
 	};
 
+	/**
+	 * DTO обновления магазина
+	 */
 	const updateDto: ShopUpdateDto = {
-		name: 'Aliexpress'
+		name: 'Wildberries'
 	};
 
+	/**
+	 * ID магазина в оперативной базе данных
+	 */
 	let shopId: number;
 
+	/**
+	 * ID магазина в аналитической базе данных
+	 */
 	let shopUUID: string;
 
+	/**
+	 * DTO удаления
+	 */
 	const deleteData = { ids: [] };
 
+	/**
+	 * Создание экземпляра приложения
+	 */
 	beforeEach(async () => {
-		app = await testNestApplicationCommerce();
+		app = await testNestApplication();
 		await app.init();
 	});
 
+	/**
+	 * Авторизация пользователя
+	 */
 	it('/api/user/auth/login (POST) - success', () => {
 		return request(app.getHttpServer())
 			.post('/user/auth/login')
@@ -44,6 +77,9 @@ describe('ShopController & ResourceController (e2e)', () => {
 			});
 	});
 
+	/**
+	 * Тест создания магазина
+	 */
 	it('/api/shop (POST) - success', () => {
 		return request(app.getHttpServer())
 			.post('/shop')
@@ -56,6 +92,9 @@ describe('ShopController & ResourceController (e2e)', () => {
 			});
 	});
 
+	/**
+	 * Тест получения списка магазинов
+	 */
 	it('/api/shop (GET) - success', () => {
 		return request(app.getHttpServer())
 			.get('/shop?page=0')
@@ -69,6 +108,9 @@ describe('ShopController & ResourceController (e2e)', () => {
 			});
 	});
 
+	/**
+	 * Тест получения магазина по ID
+	 */
 	it('/api/shop/{id} (GET) - success', () => {
 		return request(app.getHttpServer())
 			.get(`/shop/${shopId}`)
@@ -86,6 +128,9 @@ describe('ShopController & ResourceController (e2e)', () => {
 			});
 	});
 
+	/**
+	 * Тест получения магазина по ID для редактирования
+	 */
 	it('/api/shop/{id}/edit (GET) - success', () => {
 		return request(app.getHttpServer())
 			.get(`/shop/${shopId}/edit`)
@@ -97,6 +142,9 @@ describe('ShopController & ResourceController (e2e)', () => {
 			});
 	});
 
+	/**
+	 * Тест обновления магазина
+	 */
 	it('/api/shop/{id} (PUT) - success', () => {
 		return request(app.getHttpServer())
 			.put(`/shop/${shopId}`)
@@ -109,6 +157,9 @@ describe('ShopController & ResourceController (e2e)', () => {
 			});
 	});
 
+	/**
+	 * Тест получения строки подключения к скрипту мониторинга
+	 */
 	it('/api/resource/monitor/connection-string/{uuid} (GET) - success', () => {
 		return request(app.getHttpServer())
 			.get(`/resource/monitor/connection-string/${shopUUID}`)
@@ -120,6 +171,9 @@ describe('ShopController & ResourceController (e2e)', () => {
 			});
 	});
 
+	/**
+	 * Тест получения скрипта мониторинга
+	 */
 	it('/api/resource/monitor/monitor.js', () => {
 		return request(app.getHttpServer())
 			.get('/resource/monitor/monitor.js')
@@ -129,6 +183,9 @@ describe('ShopController & ResourceController (e2e)', () => {
 			});
 	});
 
+	/**
+	 * Тест удаления магазина
+	 */
 	it('/api/shop (DELETE) - success', () => {
 		deleteData.ids.push(shopId);
 

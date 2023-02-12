@@ -2,30 +2,64 @@ import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import { testNestApplication } from './test-prepared';
 
+/**
+ * Тест работы root-пользователя
+ */
 describe('UserController & AuthController (root-user) (e2e)', () => {
+	/**
+	 * Nest-приложение
+	 */
 	let app: INestApplication;
 
+	/**
+	 * "Старые" данные для входа root-пользователя
+	 */
 	const oldRoot = { email: 'root@root.com', password: 'toor' };
+
+	/**
+	 * Данные для входа обычного пользователя
+	 */
 	const testDataUser = {
 		email: 'user@gmail.com',
 		password: 'test',
 		name: 'User Doe'
 	};
+
+	/**
+	 * Обновленные данные для входа обычного пользователя
+	 */
 	const testDataUserUpdated = {
 		email: 'user@yandex.ru',
 		password: 'new-test',
 		name: 'Mike Doe'
 	};
 
+	/**
+	 * Токен root-пользователя
+	 */
 	let rootToken;
+
+	/**
+	 * ID созданного пользователя
+	 */
 	let newUserId;
+
+	/**
+	 * Токен созданного пользователя
+	 */
 	let newUserToken;
 
+	/**
+	 * Создание экземпляра приложения
+	 */
 	beforeEach(async () => {
 		app = await testNestApplication();
 		await app.init();
 	});
 
+	/**
+	 * Тест авторизации пользователя
+	 */
 	it('/api/user/auth/login (POST) - success', () => {
 		return request(app.getHttpServer())
 			.post('/user/auth/login')
@@ -37,7 +71,10 @@ describe('UserController & AuthController (root-user) (e2e)', () => {
 			});
 	});
 
-	it('/api/user/auth/registration (POST)', () => {
+	/**
+	 * Тест регистрациии пользователя
+	 */
+	it('/api/user/auth/registration (POST) - success', () => {
 		return request(app.getHttpServer())
 			.post('/user/auth/registration')
 			.send(testDataUser)
@@ -48,7 +85,10 @@ describe('UserController & AuthController (root-user) (e2e)', () => {
 			});
 	});
 
-	it('/api/user/auth/whois (POST)', () => {
+	/**
+	 * Тест получения данных о пользователе по его токену
+	 */
+	it('/api/user/auth/whois (POST) - success', () => {
 		return request(app.getHttpServer())
 			.post('/user/auth/whois')
 			.set('Authorization', `Bearer ${newUserToken}`)
@@ -59,6 +99,9 @@ describe('UserController & AuthController (root-user) (e2e)', () => {
 			});
 	});
 
+	/**
+	 * Тест получения пользователя по его ID для редактирования
+	 */
 	it('/api/user/{id}/edit (GET) - success', () => {
 		return request(app.getHttpServer())
 			.get(`/user/${newUserId}/edit`)
@@ -70,6 +113,9 @@ describe('UserController & AuthController (root-user) (e2e)', () => {
 			});
 	});
 
+	/**
+	 * Тест обновления пользователя
+	 */
 	it('/api/user/{id} (PUT) - success', () => {
 		return request(app.getHttpServer())
 			.put(`/user/${newUserId}`)
@@ -82,6 +128,9 @@ describe('UserController & AuthController (root-user) (e2e)', () => {
 			});
 	});
 
+	/**
+	 * Тест удаления пользователя
+	 */
 	it('/api/user (DELETE) - success', () => {
 		return request(app.getHttpServer())
 			.delete('/user')

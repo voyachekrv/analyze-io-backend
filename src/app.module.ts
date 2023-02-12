@@ -1,20 +1,24 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserModule } from './user/user.module';
-import { config } from 'dotenv';
-import { dataSourceOptions } from './db/data-source';
 import { CommerceModule } from './commerce/commerce.module';
 import { ResourceModule } from './resource/resource.module';
+import { dataSourceFactory } from './db/data-source-factory';
 
-config();
-
+/**
+ * Основной модуль приложения
+ */
 @Module({
 	imports: [
 		ConfigModule.forRoot({
 			envFilePath: '.env'
 		}),
-		TypeOrmModule.forRoot(dataSourceOptions),
+		TypeOrmModule.forRootAsync({
+			imports: [ConfigModule],
+			inject: [ConfigService],
+			useFactory: dataSourceFactory
+		}),
 		UserModule,
 		CommerceModule,
 		ResourceModule

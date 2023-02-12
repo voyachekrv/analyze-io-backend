@@ -6,6 +6,9 @@ import { ResourceController } from './webapi/resource.controller';
 import { UserModule } from '../user/user.module';
 import { JwtModule } from '@nestjs/jwt';
 
+/**
+ * Модуль работы со скачиваемыми ресурсами
+ */
 @Module({
 	controllers: [ResourceController],
 	providers: [ResourceService],
