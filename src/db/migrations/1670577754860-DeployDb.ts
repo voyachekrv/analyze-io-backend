@@ -24,49 +24,49 @@ export class DeployDb1670577754860 implements MigrationInterface {
 		await queryRunner.query(
 			`INSERT INTO usr."user" (email, "password", "role", "name") VALUES('root@root.com', '${CryptoJS.AES.encrypt(
 				'toor',
-				process.env.PRIVATE_KEY
+				process.env.AIO_PRIVATE_KEY
 			).toString()}', 'ROOT', 'Root1')`
 		);
 
 		await queryRunner.query(
 			`INSERT INTO usr."user" (email, "password", "role", "name") VALUES('testuser1@gmail.com', '${CryptoJS.AES.encrypt(
 				'test1',
-				process.env.PRIVATE_KEY
+				process.env.AIO_PRIVATE_KEY
 			).toString()}', 'USER', 'Петров Пётр Петрович')`
 		);
 
 		await queryRunner.query(
 			`INSERT INTO usr."user" (email, "password", "role", "name") VALUES('testuser2@gmail.com', '${CryptoJS.AES.encrypt(
 				'test1',
-				process.env.PRIVATE_KEY
+				process.env.AIO_PRIVATE_KEY
 			).toString()}', 'USER', 'John Smith')`
 		);
 
 		await queryRunner.query(
 			`INSERT INTO usr."user" (email, "password", "role", "name") VALUES('testuser3@gmail.com', '${CryptoJS.AES.encrypt(
 				'test1',
-				process.env.PRIVATE_KEY
+				process.env.AIO_PRIVATE_KEY
 			).toString()}', 'USER', 'Horthy Miklós')`
 		);
 
 		await queryRunner.query(
 			`INSERT INTO usr."user" (email, "password", "role", "name") VALUES('testuser4@gmail.com', '${CryptoJS.AES.encrypt(
 				'test1',
-				process.env.PRIVATE_KEY
+				process.env.AIO_PRIVATE_KEY
 			).toString()}', 'USER', 'Васильева Васисиса Михайловна')`
 		);
 
 		await queryRunner.query(
 			`INSERT INTO usr."user" (email, "password", "role", "name") VALUES('testuser5@gmail.com', '${CryptoJS.AES.encrypt(
 				'test1',
-				process.env.PRIVATE_KEY
+				process.env.AIO_PRIVATE_KEY
 			).toString()}', 'USER', 'Иванов Иван Иванович')`
 		);
 
 		await queryRunner.query(
 			`INSERT INTO usr."user" (email, "password", "role", "name") VALUES('testuser6@gmail.com', '${CryptoJS.AES.encrypt(
 				'test1',
-				process.env.PRIVATE_KEY
+				process.env.AIO_PRIVATE_KEY
 			).toString()}', 'USER', 'Кузнецова Роза Степановна')`
 		);
 

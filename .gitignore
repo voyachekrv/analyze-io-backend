@@ -40,3 +40,4 @@ lerna-debug.log*
 /pgdata
 
 /resources
+/resources-test

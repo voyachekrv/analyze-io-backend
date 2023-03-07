@@ -21,7 +21,7 @@ export class PasswordService {
 	public encrypt(password: string): string {
 		return CryptoJS.AES.encrypt(
 			password,
-			this.configService.get<string>('PRIVATE_KEY')
+			this.configService.get<string>('AIO_PRIVATE_KEY')
 		).toString();
 	}
 
@@ -33,7 +33,7 @@ export class PasswordService {
 	public decrypt(encryptedPassword: string): string {
 		const bytes = CryptoJS.AES.decrypt(
 			encryptedPassword,
-			this.configService.get<string>('PRIVATE_KEY')
+			this.configService.get<string>('AIO_PRIVATE_KEY')
 		);
 
 		return bytes.toString(CryptoJS.enc.Utf8);

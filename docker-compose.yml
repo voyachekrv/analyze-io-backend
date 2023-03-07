@@ -3,15 +3,12 @@
 version: "3.9"
 services:
   postgres:
-    container_name: analyze_io_postgres
+    container_name: analyze-io-db
     image: postgres:13.3
-    environment:
-      POSTGRES_DB: "analyze_io"
-      POSTGRES_USER: "postgres"
-      POSTGRES_PASSWORD: "postgres"
-      PGDATA: "/var/lib/postgresql/data/pgdata"
+    env_file:
+      - .env
     volumes:
-      - .:/var/lib/postgresql/data
+      - ./pgdata:/var/lib/postgresql/data
     ports:
       - "5432:5432"
     restart: unless-stopped
@@ -19,11 +16,10 @@ services:
       - postgres
 
   pgadmin:
-    container_name: analyze_io_pgadmin
+    container_name: analyze-io-pgadmin
     image: dpage/pgadmin4:5.7
-    environment:
-      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-pgadmin4@pgadmin.org}
-      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-admin}
+    env_file:
+      - .pgadmin.env
     volumes:
       - ./pgadmin:/var/lib/pgadmin
     ports:
@@ -31,6 +27,20 @@ services:
     restart: unless-stopped
     networks:
       - postgres
+
+  analyze-io-backend:
+    container_name: analyze-io-app
+    image: analyze-io-backend
+    depends_on:
+      - postgres
+    env_file:
+      - .env
+    ports:
+      - "8000:3000"
+    volumes:
+      - ./resources:/app/resources
+    networks:
+      - postgres  
 
 networks:
   postgres:

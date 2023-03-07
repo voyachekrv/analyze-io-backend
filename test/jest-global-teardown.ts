@@ -1,5 +1,7 @@
 import { config } from 'dotenv';
 import * as PG from 'pg';
+import * as fs from 'fs';
+import * as path from 'path';
 
 /**
  * Настройки, производящиеся после окончания процесса тестирования
@@ -27,6 +29,12 @@ const jestGlobalTeardown = async () => {
 	await pool.query('drop schema usr');
 	await pool.query('drop table public.migrations');
 	await pool.end();
+
+	const resources = path.resolve(process.cwd(), process.env.AIO_FILE_STORAGE);
+
+	if (fs.existsSync(resources)) {
+		fs.rmSync(resources, { recursive: true, force: true });
+	}
 };
 
 export default jestGlobalTeardown;

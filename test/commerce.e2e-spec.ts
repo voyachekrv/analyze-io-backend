@@ -3,6 +3,9 @@ import * as request from 'supertest';
 import { testNestApplication } from './test-prepared';
 import { ShopCreateDto } from '@commerce/dto/shop.create.dto';
 import { ShopUpdateDto } from '@commerce/dto/shop.update.dto';
+import * as path from 'path';
+import * as fs from 'fs';
+import { ConfigService } from '@nestjs/config';
 
 /**
  * Тестирование контроллеров модуля коммерции и ресурсов
@@ -19,11 +22,24 @@ describe('ShopController & ResourceController (e2e)', () => {
 	let userToken;
 
 	/**
+	 * Токен root-пользователя
+	 */
+	let rootToken;
+
+	/**
 	 * Входные данные пользователя
 	 */
 	const userCredentials = {
 		email: 'testuser1@gmail.com',
 		password: 'test1'
+	};
+
+	/**
+	 * Входные данные root-пользователя
+	 */
+	const rootCredentials = {
+		email: 'root@root.com',
+		password: 'toor'
 	};
 
 	/**
@@ -55,6 +71,14 @@ describe('ShopController & ResourceController (e2e)', () => {
 	 */
 	const deleteData = { ids: [] };
 
+	const sampleFilename = 'monitor.js';
+	const sampleFileFullPath = path.resolve(
+		process.cwd(),
+		'test',
+		'sample',
+		sampleFilename
+	);
+
 	/**
 	 * Создание экземпляра приложения
 	 */
@@ -74,6 +98,20 @@ describe('ShopController & ResourceController (e2e)', () => {
 			.then(({ body }: request.Response) => {
 				expect(body.token).toBeDefined();
 				userToken = body.token;
+			});
+	});
+
+	/**
+	 * Авторизация пользователя
+	 */
+	it('/api/user/auth/login (POST) - success (root)', () => {
+		return request(app.getHttpServer())
+			.post('/user/auth/login')
+			.send(rootCredentials)
+			.expect(200)
+			.then(({ body }: request.Response) => {
+				expect(body.token).toBeDefined();
+				rootToken = body.token;
 			});
 	});
 
@@ -168,6 +206,28 @@ describe('ShopController & ResourceController (e2e)', () => {
 			.then(({ body }: request.Response) => {
 				expect(body).toBeDefined();
 				expect(body.connectionString).toBeDefined();
+			});
+	});
+
+	it('/api/resource/monitor (POST) - success', () => {
+		return request(app.getHttpServer())
+			.post('/resource/monitor')
+			.set('Authorization', `Bearer ${rootToken}`)
+			.attach('file', sampleFileFullPath, {
+				contentType: 'text/javascript'
+			})
+			.expect(200)
+			.then(() => {
+				const configService = app.get(ConfigService);
+
+				const cwd = process.cwd();
+				const uploadsDir = path.resolve(
+					cwd,
+					configService.get<string>('AIO_FILE_STORAGE')
+				);
+
+				expect(fs.existsSync(uploadsDir)).toBeTruthy();
+				expect(fs.readdirSync(uploadsDir).length).toBeGreaterThan(0);
 			});
 	});
 
