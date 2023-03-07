@@ -7,21 +7,29 @@ import {
 	Param,
 	Req,
 	StreamableFile,
-	UseGuards
+	UseGuards,
+	Post,
+	UseInterceptors,
+	UploadedFile,
+	ParseFilePipe,
+	MaxFileSizeValidator,
+	FileTypeValidator,
+	Logger
 } from '@nestjs/common';
 import { ResourceService } from '../services/resource.service';
 import {
 	ApiBearerAuth,
 	ApiOperation,
 	ApiResponse,
-	ApiTags
+	ApiTags,
+	ApiConsumes,
+	ApiBody
 } from '@nestjs/swagger';
-import { createReadStream } from 'fs';
-import { join } from 'path';
 import { ConnectionStringType } from '../../utils/connection-string.type';
 import { Roles } from '../../user/decorators/roles-auth.decorator';
 import { UserRoles } from '../../user/entities/user.entity';
 import { RolesGuard } from '../../user/guards/roles.guard';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @Controller('resource')
 @ApiTags('Работа с ресурсами')
@@ -50,10 +58,7 @@ export class ResourceController {
 		}
 	})
 	public getMonitorBundle(): StreamableFile {
-		const file = createReadStream(
-			join(process.cwd(), 'resources', 'monitor.js')
-		);
-		return new StreamableFile(file);
+		return this.resourceService.streamMonitorScript();
 	}
 
 	@Get('monitor/connection-string/:uuid')
@@ -90,5 +95,55 @@ export class ResourceController {
 			uuid,
 			request['user']['id']
 		);
+	}
+
+	@Post('monitor')
+	@HttpCode(200)
+	@UseInterceptors(FileInterceptor('file'))
+	@UseGuards(RolesGuard)
+	@Roles(UserRoles.ROOT)
+	@ApiOperation({
+		summary: 'Загрузка скрипта мониторинга на сервер'
+	})
+	@ApiConsumes('multipart/form-data')
+	@ApiBody({
+		schema: {
+			type: 'object',
+			properties: {
+				file: {
+					type: 'string',
+					format: 'binary'
+				}
+			}
+		}
+	})
+	@ApiResponse({
+		description: 'Файл был загружен',
+		status: 200
+	})
+	@ApiResponse({
+		description: 'Bad request',
+		status: 400
+	})
+	public async upload(
+		@UploadedFile(
+			'file',
+			new ParseFilePipe({
+				validators: [
+					new MaxFileSizeValidator({ maxSize: 1000 * 1024 }),
+					new FileTypeValidator({
+						fileType: 'text/javascript'
+					})
+				]
+			})
+		)
+		file: Express.Multer.File
+	): Promise<void> {
+		Logger.log(
+			`File ${file.filename} was successfully uploaded`,
+			this.constructor.name
+		);
+
+		await this.resourceService.fileToVolume(file);
 	}
 }

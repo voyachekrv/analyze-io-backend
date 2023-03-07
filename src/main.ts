@@ -38,21 +38,24 @@ const bootstrap = async () => {
 		next();
 	});
 
-	const resourcesDir = path.join(process.cwd(), 'resources');
+	const resourcesDir = path.join(
+		process.cwd(),
+		configService.get<string>('AIO_FILE_STORAGE')
+	);
 
 	if (!fs.existsSync(resourcesDir)) {
 		fs.mkdirSync(resourcesDir);
 	}
 
-	appPort = configService.get('PORT');
+	appPort = configService.get<number>('AIO_PORT');
 
-	await app.listen(configService.get('PORT'));
+	await app.listen(appPort);
 };
 
 bootstrap().then(() => {
 	Logger.log(`Application started on port ${appPort}`, 'main');
 	Logger.log(
-		`API Documentation: http://localhost:${process.env.PORT}/${Prefixes.DOCS}`,
+		`API Documentation: http://localhost:${process.env.AIO_PORT}/${Prefixes.DOCS}`,
 		'main'
 	);
 });

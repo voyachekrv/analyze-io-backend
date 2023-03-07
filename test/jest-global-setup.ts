@@ -1,4 +1,7 @@
 import { exec } from 'child_process';
+import { config } from 'dotenv';
+import * as fs from 'fs';
+import * as path from 'path';
 
 /**
  * Исполнение консольной команды запуска миграции тестовой базы данных
@@ -19,6 +22,17 @@ const promisifyProcess = () =>
  * Настройки, производящиеся перед началом процесса тестирования
  */
 const jestGlobalSetup = async () => {
+	config({ path: '.env.test' });
+
+	const fileStorage = path.resolve(
+		process.cwd(),
+		process.env.AIO_FILE_STORAGE
+	);
+
+	if (!fs.existsSync(fileStorage)) {
+		fs.mkdirSync(fileStorage);
+	}
+
 	await promisifyProcess();
 };
 

@@ -1,4 +1,5 @@
 /resources/*
+/resources-test/*
 /pgadmin
 /pgadmin/*
 /pgadmin/sessions/*

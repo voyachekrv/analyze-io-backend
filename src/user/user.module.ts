@@ -18,7 +18,7 @@ import { User } from './entities/user.entity';
  */
 const jwtConfig = (configService: ConfigService): JwtModuleOptions => {
 	return {
-		secret: configService.get<string>('PRIVATE_KEY') || 'SECRET',
+		secret: configService.get<string>('AIO_PRIVATE_KEY') || 'SECRET',
 		signOptions: {
 			expiresIn: '48h'
 		}
