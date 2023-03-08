@@ -31,6 +31,15 @@ const jestGlobalSetup = async () => {
 
 	if (!fs.existsSync(fileStorage)) {
 		fs.mkdirSync(fileStorage);
+
+		const tmpStorage = path.resolve(
+			fileStorage,
+			process.env.AIO_FILE_TEMP_DESTINATION
+		);
+
+		if (!fs.existsSync(tmpStorage)) {
+			fs.mkdirSync(tmpStorage);
+		}
 	}
 
 	await promisifyProcess();

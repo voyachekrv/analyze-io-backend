@@ -209,6 +209,9 @@ describe('ShopController & ResourceController (e2e)', () => {
 			});
 	});
 
+	/**
+	 * Тест загрузки исполняемого файла скрипта на сервер
+	 */
 	it('/api/resource/monitor (POST) - success', () => {
 		return request(app.getHttpServer())
 			.post('/resource/monitor')
