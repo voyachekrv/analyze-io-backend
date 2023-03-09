@@ -1,22 +1,7 @@
-import { exec } from 'child_process';
 import { config } from 'dotenv';
 import * as fs from 'fs';
 import * as path from 'path';
-
-/**
- * Исполнение консольной команды запуска миграции тестовой базы данных
- * @returns Promise-объект
- */
-const promisifyProcess = () =>
-	new Promise((resolve, reject) => {
-		exec('npm run migration:run-test', err => {
-			if (err) {
-				reject(err);
-			} else {
-				resolve(null);
-			}
-		});
-	});
+import { promisifyProcessNoOutput } from '../src/utils/promisify-process';
 
 /**
  * Настройки, производящиеся перед началом процесса тестирования
@@ -42,7 +27,7 @@ const jestGlobalSetup = async () => {
 		}
 	}
 
-	await promisifyProcess();
+	await promisifyProcessNoOutput('npm run migration:run-test');
 };
 
 export default jestGlobalSetup;

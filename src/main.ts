@@ -7,10 +7,13 @@ import { Prefixes } from './prefixes';
 import * as fs from 'fs';
 import * as path from 'path';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { runMigrationIfNotExists } from './utils/run-migration';
 
 let appPort: number;
 
 const bootstrap = async () => {
+	await runMigrationIfNotExists();
+
 	const app = await NestFactory.create<NestExpressApplication>(AppModule, {
 		cors: true
 	});

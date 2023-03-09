@@ -89,9 +89,9 @@ export class DeployDb1670577754860 implements MigrationInterface {
 	}
 
 	public async down(queryRunner: QueryRunner): Promise<void> {
-		await queryRunner.query('DROP TABLE "commerce"."shop"');
+		await queryRunner.query('DROP TABLE "commerce"."shop";');
 		await queryRunner.query('drop schema commerce;');
-		await queryRunner.query('DROP TABLE "usr"."user"');
+		await queryRunner.query('DROP TABLE "usr"."user";');
 		await queryRunner.query('drop schema usr;');
 	}
 }
