@@ -1,3 +1,4 @@
+import { promisifyProcessNoOutput } from '../src/utils/promisify-process';
 import { config } from 'dotenv';
 import * as PG from 'pg';
 import * as fs from 'fs';
@@ -8,6 +9,8 @@ import * as path from 'path';
  */
 const jestGlobalTeardown = async () => {
 	config({ path: '.env.test' });
+
+	await promisifyProcessNoOutput('npm run migration:revert-test');
 
 	const pool = new PG.Pool({
 		user: process.env.POSTGRES_USER,
@@ -23,10 +26,6 @@ const jestGlobalTeardown = async () => {
 		console.error('idle client error', err.message, err.stack);
 	});
 
-	await pool.query('DROP TABLE "commerce"."shop"');
-	await pool.query('drop schema commerce;');
-	await pool.query('drop table usr."user"');
-	await pool.query('drop schema usr');
 	await pool.query('drop table public.migrations');
 	await pool.end();
 
