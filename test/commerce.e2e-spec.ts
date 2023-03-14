@@ -1,8 +1,8 @@
 import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import { testNestApplication } from './test-prepared';
-import { ShopCreateDto } from '@commerce/dto/shop.create.dto';
-import { ShopUpdateDto } from '@commerce/dto/shop.update.dto';
+import { ShopCreateDto } from '../src/commerce/dto/shop.create.dto';
+import { ShopUpdateDto } from '../src/commerce/dto/shop.update.dto';
 import * as path from 'path';
 import * as fs from 'fs';
 import { ConfigService } from '@nestjs/config';

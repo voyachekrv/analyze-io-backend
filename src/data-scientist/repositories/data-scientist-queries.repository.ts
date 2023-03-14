@@ -7,7 +7,7 @@ import { InjectRepository } from '@nestjs/typeorm';
  * Репозиторий для запросов, относящихся к аналитикам
  */
 @Injectable()
-export class DataScientistManagerQueriesRepository extends Repository<User> {
+export class DataScientistQueriesRepository extends Repository<User> {
 	/**
 	 * Репозиторий для запросов, относящихся к аналитикам
 	 * @param repository Стандартный репозиторий TypeORM

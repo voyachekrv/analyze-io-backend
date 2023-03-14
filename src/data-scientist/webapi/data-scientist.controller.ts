@@ -12,7 +12,7 @@ import {
 	UsePipes,
 	ValidationPipe
 } from '@nestjs/common';
-import { DataScientistManagerService } from '../services/data-scientist-manager.service';
+import { DataScientistService } from '../services/data-scientist.service';
 import {
 	ApiTags,
 	ApiBearerAuth,
@@ -21,29 +21,27 @@ import {
 } from '@nestjs/swagger';
 import { RolesGuard } from '../../user/guards/roles.guard';
 import { UserRoles } from '../../user/entities/user.entity';
-import { UserItemDto } from '../..//user/dto/user.item.dto';
+import { UserItemDto } from '../../user/dto/user.item.dto';
 import { Roles } from '../../user/decorators/roles-auth.decorator';
-import { UserCardDto } from 'src/user/dto/user.card.dto';
-import { CreationResultDto } from 'src/utils/creation-result.dto';
-import { UserCreateDto } from 'src/user/dto/user.create.dto';
+import { UserCardDto } from '../../user/dto/user.card.dto';
+import { CreationResultDto } from '../../utils/creation-result.dto';
+import { UserCreateDto } from '../../user/dto/user.create.dto';
 import { SubordinatePatchDto } from '../dto/subordinate.patch.dto';
 import { ManagerGuard } from '../guards/manager.guard';
-import { DeleteDto } from 'src/utils/delete.dto';
+import { DeleteDto } from '../../utils/delete.dto';
 
 /**
  * Контроллер для работы с аналитиками
  */
-@Controller('data-scientist-manager/subordinates')
+@Controller('data-scientist')
 @ApiTags('Управление аналитиками')
 @ApiBearerAuth()
-export class DataScientistManagerController {
+export class DataScientistController {
 	/**
 	 * Контроллер для работы с аналитиками
-	 * @param dataScientistManagerService Сервис для работы с аналитиками
+	 * @param dataScientistService Сервис для работы с аналитиками
 	 */
-	constructor(
-		private readonly dataScientistManagerService: DataScientistManagerService
-	) {}
+	constructor(private readonly dataScientistService: DataScientistService) {}
 
 	@Get()
 	@UseGuards(RolesGuard)
@@ -61,9 +59,7 @@ export class DataScientistManagerController {
 		description: 'Forbidden'
 	})
 	public async index(@Req() request: Request): Promise<UserItemDto[]> {
-		return await this.dataScientistManagerService.findAll(
-			request['user']['id']
-		);
+		return await this.dataScientistService.findAll(request['user']['id']);
 	}
 
 	@Get(':id')
@@ -89,7 +85,7 @@ export class DataScientistManagerController {
 		@Req() request: Request,
 		@Param('id') userId: number
 	): Promise<UserCardDto> {
-		return await this.dataScientistManagerService.findById(
+		return await this.dataScientistService.findById(
 			request['user']['id'],
 			userId
 		);
@@ -121,7 +117,7 @@ export class DataScientistManagerController {
 	): Promise<CreationResultDto> {
 		return new CreationResultDto(
 			(
-				await this.dataScientistManagerService.create(
+				await this.dataScientistService.create(
 					dto,
 					request['user']['id']
 				)
@@ -157,7 +153,7 @@ export class DataScientistManagerController {
 		@Body() dto: SubordinatePatchDto,
 		@Req() request: Request
 	): Promise<void> {
-		await this.dataScientistManagerService.changeManager(
+		await this.dataScientistService.changeManager(
 			request['user']['id'],
 			dto
 		);
@@ -191,9 +187,6 @@ export class DataScientistManagerController {
 		@Req() request: Request,
 		@Body() dto: DeleteDto
 	): Promise<void> {
-		await this.dataScientistManagerService.remove(
-			request['user']['id'],
-			dto
-		);
+		await this.dataScientistService.remove(request['user']['id'], dto);
 	}
 }

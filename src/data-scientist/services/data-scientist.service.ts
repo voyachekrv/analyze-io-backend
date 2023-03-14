@@ -1,25 +1,25 @@
 import { Injectable } from '@nestjs/common';
 import { UserItemDto } from '../../user/dto/user.item.dto';
-import { DataScientistManagerQueriesRepository } from '../repositories/data-scientist-manager-queries.repository';
+import { DataScientistQueriesRepository } from '../repositories/data-scientist-queries.repository';
 import { UserMapper } from '../../user/mappers/user.mapper';
-import { UserCardDto } from 'src/user/dto/user.card.dto';
-import { UserCreateDto } from 'src/user/dto/user.create.dto';
-import { User, UserRoles } from 'src/user/entities/user.entity';
+import { UserCardDto } from '../../user/dto/user.card.dto';
+import { UserCreateDto } from '../../user/dto/user.create.dto';
+import { User, UserRoles } from '../../user/entities/user.entity';
 import { SubordinatePatchDto } from '../dto/subordinate.patch.dto';
-import { DeleteDto } from 'src/utils/delete.dto';
+import { DeleteDto } from '../../utils/delete.dto';
 
 /**
  * Сервис для работы с аналитиками
  */
 @Injectable()
-export class DataScientistManagerService {
+export class DataScientistService {
 	/**
 	 * Сервис для работы с аналитиками
-	 * @param dataScientistManagerQueriesRepository Репозиторий для запросов к аналитикам
+	 * @param dataScientistQueriesRepository Репозиторий для запросов к аналитикам
 	 * @param userMapper Маппер сущности "Пользователь"
 	 */
 	constructor(
-		private readonly dataScientistManagerQueriesRepository: DataScientistManagerQueriesRepository,
+		private readonly dataScientistQueriesRepository: DataScientistQueriesRepository,
 		private readonly userMapper: UserMapper
 	) {}
 
@@ -30,7 +30,7 @@ export class DataScientistManagerService {
 	 */
 	public async findAll(managerId: number): Promise<UserItemDto[]> {
 		return (
-			await this.dataScientistManagerQueriesRepository.findAll(managerId)
+			await this.dataScientistQueriesRepository.findAll(managerId)
 		).map(entity => this.userMapper.toItemDto(entity));
 	}
 
@@ -45,7 +45,7 @@ export class DataScientistManagerService {
 		userId: number
 	): Promise<UserCardDto> {
 		return this.userMapper.toCardDto(
-			await this.dataScientistManagerQueriesRepository.findOneOr404(
+			await this.dataScientistQueriesRepository.findOneOr404(
 				managerId,
 				userId
 			)
@@ -58,7 +58,7 @@ export class DataScientistManagerService {
 	 * @returns Является ли пользователь менеджером
 	 */
 	public async checkManager(id: number): Promise<boolean> {
-		return await this.dataScientistManagerQueriesRepository.isManager(id);
+		return await this.dataScientistQueriesRepository.isManager(id);
 	}
 
 	/**
@@ -69,11 +69,11 @@ export class DataScientistManagerService {
 	 */
 	public async create(dto: UserCreateDto, managerId: number): Promise<User> {
 		const manager =
-			await this.dataScientistManagerQueriesRepository.findManagerOr404(
+			await this.dataScientistQueriesRepository.findManagerOr404(
 				managerId
 			);
 
-		return await this.dataScientistManagerQueriesRepository.save(
+		return await this.dataScientistQueriesRepository.save(
 			this.userMapper.create(dto, UserRoles.DATA_SCIENTIST, manager)
 		);
 	}
@@ -88,14 +88,14 @@ export class DataScientistManagerService {
 		dto: SubordinatePatchDto
 	): Promise<void> {
 		const patchCandidates =
-			await this.dataScientistManagerQueriesRepository.findAllByIds(
+			await this.dataScientistQueriesRepository.findAllByIds(
 				managerId,
 				dto.subordinates
 			);
 
 		if (patchCandidates.length > 0) {
 			const newManager =
-				await this.dataScientistManagerQueriesRepository.findManagerOr404(
+				await this.dataScientistQueriesRepository.findManagerOr404(
 					dto.managerId
 				);
 
@@ -104,7 +104,9 @@ export class DataScientistManagerService {
 			});
 		}
 
-		await this.dataScientistManagerQueriesRepository.save(patchCandidates);
+		await this.dataScientistQueriesRepository.save(patchCandidates);
+
+		// TODO: Сделать DTO для вывода результата patch метода
 	}
 
 	/**
@@ -113,7 +115,7 @@ export class DataScientistManagerService {
 	 * @param dto ID сущностей для удаления
 	 */
 	public async remove(managerId: number, dto: DeleteDto): Promise<void> {
-		await this.dataScientistManagerQueriesRepository.deleteByIds(
+		await this.dataScientistQueriesRepository.deleteByIds(
 			managerId,
 			dto.ids
 		);
