@@ -44,7 +44,10 @@ export class AuthService {
 	 * @returns Bearer-токен
 	 */
 	public async register(dto: UserCreateDto): Promise<TokenDto> {
-		const user = await this.userService.create(dto, UserRoles.USER);
+		const user = await this.userService.create(
+			dto,
+			UserRoles.DATA_SCIENCE_MANAGER
+		);
 
 		Logger.log(
 			`registered user, id: ${user.id}, role: ${user.role}`,

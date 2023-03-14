@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { UserRoles } from '../entities/user.entity';
+import { UserItemDto } from './user.item.dto';
 
 /**
  * Информация для отображения карточки пользователя
@@ -11,12 +12,23 @@ export class UserCardDto {
 	 * @param email Email
 	 * @param name Имя пользователя
 	 * @param role Роль
+	 * @param manager Менеджер (у аналитика)
 	 */
-	constructor(id: number, email: string, name: string, role: UserRoles) {
+	constructor(
+		id: number,
+		email: string,
+		name: string,
+		role: UserRoles,
+		manager?: UserItemDto
+	) {
 		this.id = id;
 		this.email = email;
 		this.name = name;
 		this.role = role;
+
+		if (manager) {
+			this.manager = manager;
+		}
 	}
 
 	/**
@@ -42,9 +54,15 @@ export class UserCardDto {
 	 */
 	@ApiProperty({
 		description: 'Роль пользователя',
-		example: UserRoles.USER,
+		example: UserRoles.DATA_SCIENCE_MANAGER,
 		enum: UserRoles,
 		enumName: 'UserRoles'
 	})
 	role: UserRoles;
+
+	/**
+	 * Менеджер аналитика
+	 */
+	@ApiProperty({ description: 'Менеджер', example: UserItemDto })
+	manager?: UserItemDto;
 }

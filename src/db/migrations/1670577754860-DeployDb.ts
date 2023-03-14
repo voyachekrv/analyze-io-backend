@@ -16,58 +16,66 @@ export class DeployDb1670577754860 implements MigrationInterface {
 				"email" character varying(200) NOT NULL, 
 				"password" character varying(200) NOT NULL, 
 				"role" character varying(32) NOT NULL,
-				"name" character varying(300) NOT NULL, 
+				"name" character varying(300) NOT NULL,
+				"manager_id" integer,
 				CONSTRAINT "PK_cace4a159ff9f2512dd42373760" PRIMARY KEY ("id")
 			)
 			`
 		);
 		await queryRunner.query(
-			`INSERT INTO usr."user" (email, "password", "role", "name") VALUES('root@root.com', '${CryptoJS.AES.encrypt(
+			`ALTER TABLE "usr"."user" 
+			ADD CONSTRAINT "FK_b925754780ce53c20179d7204f9" 
+			FOREIGN KEY ("manager_id") 
+			REFERENCES "usr"."user"("id") 
+			ON DELETE CASCADE ON UPDATE NO ACTION`
+		);
+		await queryRunner.query(
+			`INSERT INTO usr."user" (email, "password", "role", "name", "manager_id") VALUES('root@root.com', '${CryptoJS.AES.encrypt(
 				'toor',
 				process.env.AIO_PRIVATE_KEY
-			).toString()}', 'ROOT', 'Root1')`
+			).toString()}', 'ROOT', 'Root1', NULL)`
 		);
 
 		await queryRunner.query(
-			`INSERT INTO usr."user" (email, "password", "role", "name") VALUES('testuser1@gmail.com', '${CryptoJS.AES.encrypt(
+			`INSERT INTO usr."user" (email, "password", "role", "name", "manager_id") VALUES('testuser1@gmail.com', '${CryptoJS.AES.encrypt(
 				'test1',
 				process.env.AIO_PRIVATE_KEY
-			).toString()}', 'USER', 'Петров Пётр Петрович')`
+			).toString()}', 'DATA_SCIENCE_MANAGER', 'Петров Пётр Петрович', NULL)`
 		);
 
 		await queryRunner.query(
-			`INSERT INTO usr."user" (email, "password", "role", "name") VALUES('testuser2@gmail.com', '${CryptoJS.AES.encrypt(
+			`INSERT INTO usr."user" (email, "password", "role", "name", "manager_id") VALUES('testuser2@gmail.com', '${CryptoJS.AES.encrypt(
 				'test1',
 				process.env.AIO_PRIVATE_KEY
-			).toString()}', 'USER', 'John Smith')`
+			).toString()}', 'DATA_SCIENCE_MANAGER', 'John Smith', NULL)`
 		);
 
 		await queryRunner.query(
-			`INSERT INTO usr."user" (email, "password", "role", "name") VALUES('testuser3@gmail.com', '${CryptoJS.AES.encrypt(
+			`INSERT INTO usr."user" (email, "password", "role", "name", "manager_id") VALUES('testuser3@gmail.com', '${CryptoJS.AES.encrypt(
 				'test1',
 				process.env.AIO_PRIVATE_KEY
-			).toString()}', 'USER', 'Horthy Miklós')`
+			).toString()}', 'DATA_SCIENCE_MANAGER', 'Horthy Miklós', NULL)`
 		);
 
 		await queryRunner.query(
-			`INSERT INTO usr."user" (email, "password", "role", "name") VALUES('testuser4@gmail.com', '${CryptoJS.AES.encrypt(
+			`INSERT INTO usr."user" (email, "password", "role", "name", "manager_id") VALUES('testuser4@gmail.com', '${CryptoJS.AES.encrypt(
 				'test1',
 				process.env.AIO_PRIVATE_KEY
-			).toString()}', 'USER', 'Васильева Васисиса Михайловна')`
+			).toString()}', 'DATA_SCIENTIST', 'Васильева Васисиса Михайловна', 2)`
 		);
 
 		await queryRunner.query(
-			`INSERT INTO usr."user" (email, "password", "role", "name") VALUES('testuser5@gmail.com', '${CryptoJS.AES.encrypt(
+			`INSERT INTO usr."user" (email, "password", "role", "name", "manager_id") VALUES('testuser5@gmail.com', '${CryptoJS.AES.encrypt(
 				'test1',
 				process.env.AIO_PRIVATE_KEY
-			).toString()}', 'USER', 'Иванов Иван Иванович')`
+			).toString()}', 'DATA_SCIENTIST', 'Иванов Иван Иванович', 2)`
 		);
 
 		await queryRunner.query(
-			`INSERT INTO usr."user" (email, "password", "role", "name") VALUES('testuser6@gmail.com', '${CryptoJS.AES.encrypt(
+			`INSERT INTO usr."user" (email, "password", "role", "name", "manager_id") VALUES('testuser6@gmail.com', '${CryptoJS.AES.encrypt(
 				'test1',
 				process.env.AIO_PRIVATE_KEY
-			).toString()}', 'USER', 'Кузнецова Роза Степановна')`
+			).toString()}', 'DATA_SCIENTIST', 'Кузнецова Роза Степановна', 3)`
 		);
 
 		await queryRunner.query('create schema commerce');

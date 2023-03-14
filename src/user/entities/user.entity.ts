@@ -1,14 +1,27 @@
+/* eslint-disable no-use-before-define */
 import { PostgresSchemas } from '../../db/postgres.schemas';
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import {
+	Column,
+	Entity,
+	PrimaryGeneratedColumn,
+	ManyToOne,
+	JoinColumn
+} from 'typeorm';
 
 /**
  * Роли пользователя
  */
 export enum UserRoles {
 	/**
-	 * Пользователь без привилегий суперпользователя
+	 * Аналитик
 	 */
-	USER = 'USER',
+	DATA_SCIENTIST = 'DATA_SCIENTIST',
+
+	/**
+	 * Менеджер по анализу данных
+	 */
+	DATA_SCIENCE_MANAGER = 'DATA_SCIENCE_MANAGER',
+
 	/**
 	 * Суперпользователь
 	 */
@@ -31,11 +44,16 @@ export class User {
 		email: string,
 		password: string,
 		name: string,
+		manager?: User,
 		role?: UserRoles
 	) {
 		this.email = email;
 		this.password = password;
 		this.name = name;
+
+		if (manager) {
+			this.manager = manager;
+		}
 
 		if (role) {
 			this.role = role;
@@ -71,4 +89,14 @@ export class User {
 	 */
 	@Column({ type: 'varchar', length: 300 })
 	name: string;
+
+	/**
+	 * Менеджер (для аналитика)
+	 */
+	@ManyToOne(() => User, { nullable: true, eager: true, onDelete: 'CASCADE' })
+	@JoinColumn({
+		name: 'manager_id',
+		referencedColumnName: 'id'
+	})
+	manager: User;
 }

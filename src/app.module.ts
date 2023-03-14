@@ -5,6 +5,7 @@ import { UserModule } from './user/user.module';
 import { CommerceModule } from './commerce/commerce.module';
 import { ResourceModule } from './resource/resource.module';
 import { dataSourceFactory } from './db/data-source-factory';
+import { DataScientistManagerModule } from './data-scientist-manager/data-scientist-manager.module';
 
 /**
  * Основной модуль приложения
@@ -21,7 +22,8 @@ import { dataSourceFactory } from './db/data-source-factory';
 		}),
 		UserModule,
 		CommerceModule,
-		ResourceModule
+		ResourceModule,
+		DataScientistManagerModule
 	]
 })
 export class AppModule {}

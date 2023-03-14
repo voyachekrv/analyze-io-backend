@@ -48,7 +48,7 @@ export class ShopController {
 	 */
 	@Get()
 	@UseGuards(RolesGuard, ValidateQueryParamGuard)
-	@Roles(UserRoles.USER, UserRoles.ROOT)
+	@Roles(UserRoles.DATA_SCIENCE_MANAGER, UserRoles.ROOT)
 	@ApiOperation({
 		summary: 'Получение списка магазинов'
 	})
@@ -105,7 +105,7 @@ export class ShopController {
 	 */
 	@Get(':id')
 	@UseGuards(RolesGuard)
-	@Roles(UserRoles.USER, UserRoles.ROOT)
+	@Roles(UserRoles.DATA_SCIENCE_MANAGER, UserRoles.ROOT)
 	@ApiOperation({
 		summary: 'Получение карточки магазина по его ID'
 	})
@@ -147,7 +147,7 @@ export class ShopController {
 	 */
 	@Get(':id/edit')
 	@UseGuards(RolesGuard)
-	@Roles(UserRoles.USER, UserRoles.ROOT)
+	@Roles(UserRoles.DATA_SCIENCE_MANAGER, UserRoles.ROOT)
 	@ApiOperation({
 		summary: 'Получение информации для обновления магазина'
 	})
@@ -188,7 +188,7 @@ export class ShopController {
 	 */
 	@Post()
 	@UseGuards(RolesGuard)
-	@Roles(UserRoles.USER, UserRoles.ROOT)
+	@Roles(UserRoles.DATA_SCIENCE_MANAGER, UserRoles.ROOT)
 	@UsePipes(new ValidationPipe())
 	@ApiOperation({
 		summary: 'Создание магазина'
@@ -225,7 +225,7 @@ export class ShopController {
 	@Put(':id')
 	@UsePipes(new ValidationPipe())
 	@UseGuards(RolesGuard)
-	@Roles(UserRoles.USER, UserRoles.ROOT)
+	@Roles(UserRoles.DATA_SCIENCE_MANAGER, UserRoles.ROOT)
 	@ApiOperation({
 		summary: 'Обновление данных о магазине'
 	})
@@ -263,7 +263,7 @@ export class ShopController {
 	@HttpCode(204)
 	@UsePipes(new ValidationPipe())
 	@UseGuards(RolesGuard)
-	@Roles(UserRoles.USER, UserRoles.ROOT)
+	@Roles(UserRoles.DATA_SCIENCE_MANAGER, UserRoles.ROOT)
 	@ApiOperation({
 		summary: 'Удаление магазинов'
 	})

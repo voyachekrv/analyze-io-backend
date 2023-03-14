@@ -97,7 +97,7 @@ export class AuthController {
 	@Post('/whois')
 	@HttpCode(200)
 	@UseGuards(RolesGuard)
-	@Roles(UserRoles.USER, UserRoles.ROOT)
+	@Roles(UserRoles.DATA_SCIENCE_MANAGER, UserRoles.ROOT)
 	@UsePipes(new ValidationPipe())
 	@ApiOperation({
 		summary: 'Возврат информации о зарегистрированном пользователе'

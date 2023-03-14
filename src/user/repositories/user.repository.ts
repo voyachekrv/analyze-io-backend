@@ -91,6 +91,7 @@ export class UserRepository extends Repository<User> {
 	 */
 	public async findOneOr404(id: number): Promise<User> {
 		const entity = await this.createQueryBuilder('user')
+			.leftJoinAndSelect('user.manager', 'manager')
 			.where({ id })
 			.getOne();
 

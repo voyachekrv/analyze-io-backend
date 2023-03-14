@@ -63,7 +63,7 @@ export class ResourceController {
 
 	@Get('monitor/connection-string/:uuid')
 	@UseGuards(RolesGuard)
-	@Roles(UserRoles.USER, UserRoles.ROOT)
+	@Roles(UserRoles.DATA_SCIENCE_MANAGER, UserRoles.ROOT)
 	@ApiOperation({
 		summary: 'Получение строки подключения к скрипту отслеживания'
 	})

@@ -36,12 +36,18 @@ export class UserMapper {
 	 * @returns DTO карточки
 	 */
 	public toCardDto(entity: User): UserCardDto {
-		return new UserCardDto(
+		const dto = new UserCardDto(
 			entity.id,
 			entity.email,
 			entity.name,
 			entity.role
 		);
+
+		if (entity.manager) {
+			dto.manager = this.toItemDto(entity.manager);
+		}
+
+		return dto;
 	}
 
 	/**
@@ -63,11 +69,12 @@ export class UserMapper {
 	 * @param role Роль пользователя
 	 * @returns Сущность "пользователь" (пароль зашифрован)
 	 */
-	public create(dto: UserCreateDto, role: UserRoles): User {
+	public create(dto: UserCreateDto, role: UserRoles, manager?: User): User {
 		return new User(
 			dto.email,
 			this.passwordService.encrypt(dto.password),
 			dto.name,
+			manager,
 			role
 		);
 	}

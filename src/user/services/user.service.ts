@@ -103,7 +103,7 @@ export class UserService {
 		);
 
 		return await this.userRepository.save(
-			this.userMapper.create(dto, role)
+			this.userMapper.create(dto, role, null)
 		);
 	}
 

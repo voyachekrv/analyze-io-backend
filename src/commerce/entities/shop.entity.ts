@@ -40,7 +40,7 @@ export class Shop {
 	id: number;
 
 	/**
-	 * Владелец
+	 * Менеджер аналитики
 	 */
 	@ManyToOne(() => User, {
 		onDelete: 'CASCADE'
