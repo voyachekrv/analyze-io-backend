@@ -1,7 +1,7 @@
 import { config } from 'dotenv';
 import * as fs from 'fs';
 import * as path from 'path';
-import { promisifyProcessNoOutput } from '../src/utils/promisify-process';
+import { promisifyProcessNoOutput } from '../../src/utils/promisify-process';
 
 /**
  * Настройки, производящиеся перед началом процесса тестирования

@@ -5,14 +5,14 @@ import {
 	ForbiddenException
 } from '@nestjs/common';
 import { Observable } from 'rxjs';
-import { DataScientistService } from '../services/data-scientist.service';
+import { UserService } from '../services/user.service';
 
 /**
  * Проверка ID нового менеджера аналитики
  */
 @Injectable()
 export class ManagerGuard implements CanActivate {
-	constructor(private dataScientistManagerService: DataScientistService) {}
+	constructor(private userService: UserService) {}
 
 	canActivate(
 		context: ExecutionContext
@@ -21,7 +21,7 @@ export class ManagerGuard implements CanActivate {
 			const req = context.switchToHttp().getRequest();
 
 			return new Promise((resolve, reject) => {
-				this.dataScientistManagerService
+				this.userService
 					.checkManager(req.body['managerId'])
 					.then(managerResult => {
 						if (managerResult) {

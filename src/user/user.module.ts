@@ -46,6 +46,6 @@ const jwtConfig = (configService: ConfigService): JwtModuleOptions => {
 		UserRepository,
 		PasswordService
 	],
-	exports: [JwtModule, UserRepository, UserMapper]
+	exports: [JwtModule, UserRepository, UserMapper, UserService]
 })
 export class UserModule {}

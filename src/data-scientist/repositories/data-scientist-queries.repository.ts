@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { User, UserRoles } from '../../user/entities/user.entity';
+import { User } from '../../user/entities/user.entity';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 
@@ -86,24 +86,6 @@ export class DataScientistQueriesRepository extends Repository<User> {
 		}
 
 		return entity;
-	}
-
-	/**
-	 * Проверка на то, является ли пользователь менеджером
-	 * @param id ID пользователя
-	 * @returns Является ли пользователь менеджером
-	 */
-	public async isManager(id: number): Promise<boolean> {
-		try {
-			const entity = await this.findManagerOr404(id);
-			if (entity.role === UserRoles.DATA_SCIENCE_MANAGER) {
-				return true;
-			}
-
-			return false;
-		} catch (e) {
-			return false;
-		}
 	}
 
 	/**

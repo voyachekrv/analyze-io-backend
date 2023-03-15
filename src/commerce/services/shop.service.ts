@@ -8,6 +8,8 @@ import { ShopUpdateDto } from '../dto/shop.update.dto';
 import { ShopCreateDto } from '../dto/shop.create.dto';
 import { Shop } from '../entities/shop.entity';
 import { DeleteDto } from '../../utils/delete.dto';
+import { ShopPatchDto } from '../dto/shop.patch.dto';
+import { UserRepository } from '../../user/repositories/user.repository';
 
 /**
  * Сервис для работы с пользователями
@@ -16,6 +18,7 @@ import { DeleteDto } from '../../utils/delete.dto';
 export class ShopService {
 	constructor(
 		private readonly shopRepository: ShopRepository,
+		private readonly userRepository: UserRepository,
 		private readonly shopMapper: ShopMapper
 	) {}
 
@@ -137,13 +140,36 @@ export class ShopService {
 	}
 
 	/**
+	 * Смена владельца магазина
+	 * @param userId ID текущего владельца
+	 * @param id ID магазина
+	 * @param newOwnerId ID нового владельца магазина
+	 * @returns Результат смены владельца
+	 */
+	public async changeOwner(
+		userId: number,
+		id: number,
+		newOwnerId: number
+	): Promise<ShopPatchDto> {
+		const shop = await this.shopRepository.findByIdAndUserId(userId, id);
+
+		const newOwner = await this.userRepository.findById(newOwnerId);
+
+		shop.user = newOwner;
+
+		return this.shopMapper.toPatchResultDto(
+			await this.shopRepository.save(shop)
+		);
+	}
+
+	/**
 	 * Удаление магазинов
 	 * @param userId ID пользователя
 	 * @param dto ID сущностей для удаления
 	 */
 	public async remove(userId: number, dto: DeleteDto): Promise<void> {
 		Logger.log(
-			`delete users, user: ${userId}, ids: ${dto.ids.join(', ')}`,
+			`delete shops, user: ${userId}, ids: ${dto.ids.join(', ')}`,
 			this.constructor.name
 		);
 

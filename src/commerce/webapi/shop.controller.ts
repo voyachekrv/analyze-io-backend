@@ -7,6 +7,7 @@ import {
 	Get,
 	HttpCode,
 	Param,
+	Patch,
 	Post,
 	Put,
 	Query,
@@ -33,6 +34,9 @@ import { ShopUpdateDto } from '../dto/shop.update.dto';
 import { CreationResultDto } from '../../utils/creation-result.dto';
 import { ShopCreateDto } from '../dto/shop.create.dto';
 import { DeleteDto } from '../../utils/delete.dto';
+import { ManagerGuard } from '../../user/guards/manager.guard';
+import { ShopPatchDto } from '../dto/shop.patch.dto';
+import { ShopPatchInputDto } from '../dto/shop.patch-input.dto';
 
 @Controller('shop')
 @ApiTags('Интернет-магазины пользователя')
@@ -212,6 +216,50 @@ export class ShopController {
 	): Promise<CreationResultDto> {
 		return new CreationResultDto(
 			(await this.shopService.create(request['user']['id'], dto)).id
+		);
+	}
+
+	/**
+	 * Смена владельца магазина
+	 * @param id ID магазина
+	 * @param req HTTP Request
+	 * @param dto DTO обновления
+	 * @returns данные обновленной сущности
+	 */
+	@Patch(':id/owner')
+	@HttpCode(200)
+	@UseGuards(RolesGuard, ManagerGuard)
+	@Roles(UserRoles.DATA_SCIENCE_MANAGER, UserRoles.ROOT)
+	@UsePipes(new ValidationPipe())
+	@ApiOperation({
+		summary: 'Смена владельца магазина'
+	})
+	@ApiResponse({
+		description: 'ID созданного магазина',
+		status: 200,
+		type: ShopPatchDto
+	})
+	@ApiResponse({
+		status: 400,
+		description: 'Bad request'
+	})
+	@ApiResponse({
+		status: 403,
+		description: 'Forbidden'
+	})
+	@ApiResponse({
+		status: 404,
+		description: 'Not Found'
+	})
+	public async changeOwner(
+		@Req() req: Request,
+		@Body() dto: ShopPatchInputDto,
+		@Param('id') id: number
+	): Promise<ShopPatchDto> {
+		return await this.shopService.changeOwner(
+			req['user']['id'],
+			Number(id),
+			dto.managerId
 		);
 	}
 

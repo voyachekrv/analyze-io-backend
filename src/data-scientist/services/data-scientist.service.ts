@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { UserItemDto } from '../../user/dto/user.item.dto';
 import { DataScientistQueriesRepository } from '../repositories/data-scientist-queries.repository';
 import { UserMapper } from '../../user/mappers/user.mapper';
@@ -7,6 +7,8 @@ import { UserCreateDto } from '../../user/dto/user.create.dto';
 import { User, UserRoles } from '../../user/entities/user.entity';
 import { SubordinatePatchDto } from '../dto/subordinate.patch.dto';
 import { DeleteDto } from '../../utils/delete.dto';
+import { ManagerChangeResult } from '../types/manager-change-result.type';
+import { DataScientistMapper } from '../mappers/data-scientist.mapper';
 
 /**
  * Сервис для работы с аналитиками
@@ -20,7 +22,8 @@ export class DataScientistService {
 	 */
 	constructor(
 		private readonly dataScientistQueriesRepository: DataScientistQueriesRepository,
-		private readonly userMapper: UserMapper
+		private readonly userMapper: UserMapper,
+		private readonly dataScientistMapper: DataScientistMapper
 	) {}
 
 	/**
@@ -29,6 +32,11 @@ export class DataScientistService {
 	 * @returns Список аналитиков
 	 */
 	public async findAll(managerId: number): Promise<UserItemDto[]> {
+		Logger.log(
+			`finding data scientists, managerID: ${managerId}`,
+			this.constructor.name
+		);
+
 		return (
 			await this.dataScientistQueriesRepository.findAll(managerId)
 		).map(entity => this.userMapper.toItemDto(entity));
@@ -44,6 +52,11 @@ export class DataScientistService {
 		managerId: number,
 		userId: number
 	): Promise<UserCardDto> {
+		Logger.log(
+			`finding data scientist by ID, ID: ${userId} managerID: ${managerId}`,
+			this.constructor.name
+		);
+
 		return this.userMapper.toCardDto(
 			await this.dataScientistQueriesRepository.findOneOr404(
 				managerId,
@@ -53,21 +66,17 @@ export class DataScientistService {
 	}
 
 	/**
-	 * Проверка на то, является ли пользователь менеджером
-	 * @param id ID пользователя
-	 * @returns Является ли пользователь менеджером
-	 */
-	public async checkManager(id: number): Promise<boolean> {
-		return await this.dataScientistQueriesRepository.isManager(id);
-	}
-
-	/**
 	 * Создание нового аналитика
 	 * @param dto DTO создания пользователя
 	 * @param managerId ID менеджера
 	 * @returns Новый пользователь
 	 */
 	public async create(dto: UserCreateDto, managerId: number): Promise<User> {
+		Logger.log(
+			`creating user data-scientist, dto: ${dto.email}, ${dto.name}, managerID: ${managerId}`,
+			this.constructor.name
+		);
+
 		const manager =
 			await this.dataScientistQueriesRepository.findManagerOr404(
 				managerId
@@ -86,7 +95,12 @@ export class DataScientistService {
 	public async changeManager(
 		managerId: number,
 		dto: SubordinatePatchDto
-	): Promise<void> {
+	): Promise<ManagerChangeResult> {
+		Logger.log(
+			`change manager, old manager ID: ${managerId}, new manager ID: ${dto.managerId}, subordinates: ${dto.subordinates}`,
+			this.constructor.name
+		);
+
 		const patchCandidates =
 			await this.dataScientistQueriesRepository.findAllByIds(
 				managerId,
@@ -104,9 +118,18 @@ export class DataScientistService {
 			});
 		}
 
-		await this.dataScientistQueriesRepository.save(patchCandidates);
+		const result = await this.dataScientistQueriesRepository.save(
+			patchCandidates
+		);
 
-		// TODO: Сделать DTO для вывода результата patch метода
+		result.forEach(entity => {
+			Logger.log(
+				`manager changed, old manager ID: ${managerId}, new manager ID: ${entity.manager.id}, subordinate: ${entity.id}`,
+				this.constructor.name
+			);
+		});
+
+		return this.dataScientistMapper.toPatchResultDto(result);
 	}
 
 	/**
@@ -115,6 +138,13 @@ export class DataScientistService {
 	 * @param dto ID сущностей для удаления
 	 */
 	public async remove(managerId: number, dto: DeleteDto): Promise<void> {
+		Logger.log(
+			`delete data scientists, manager: ${managerId}, ids: ${dto.ids.join(
+				', '
+			)}`,
+			this.constructor.name
+		);
+
 		await this.dataScientistQueriesRepository.deleteByIds(
 			managerId,
 			dto.ids

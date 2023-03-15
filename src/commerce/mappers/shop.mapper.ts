@@ -6,6 +6,8 @@ import { Shop } from '../entities/shop.entity';
 import { ShopRepository } from '../repositories/shop.repository';
 import { Injectable } from '@nestjs/common';
 import { UserRepository } from '../../user/repositories/user.repository';
+import { ShopPatchDto } from '../dto/shop.patch.dto';
+import { UserMapper } from '../../user/mappers/user.mapper';
 
 /**
  * Маппер для сущности Магазин
@@ -19,7 +21,8 @@ export class ShopMapper {
 	 */
 	constructor(
 		private readonly userReoository: UserRepository,
-		private readonly shopRepository: ShopRepository
+		private readonly shopRepository: ShopRepository,
+		private readonly userMapper: UserMapper
 	) {}
 
 	/**
@@ -47,6 +50,18 @@ export class ShopMapper {
 	 */
 	public toUpdateDto(entity: Shop): ShopUpdateDto {
 		return new ShopUpdateDto(entity.name);
+	}
+
+	/**
+	 * Конвертация в DTO смены владельца
+	 * @param entity Сущность Магазин
+	 * @returns DTO результата смены владельца
+	 */
+	public toPatchResultDto(entity: Shop): ShopPatchDto {
+		return new ShopPatchDto(
+			this.toItemDto(entity),
+			this.userMapper.toItemDto(entity.user)
+		);
 	}
 
 	/**

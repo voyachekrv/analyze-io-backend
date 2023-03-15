@@ -1,5 +1,5 @@
 import { INestApplication } from '@nestjs/common';
-import { testNestApplication } from './test-prepared';
+import { testNestApplication } from './configuration/test-prepared';
 import * as request from 'supertest';
 import { UserCreateDto } from '../src/user/dto/user.create.dto';
 
@@ -132,7 +132,13 @@ describe('DataScientistController (e2e)', () => {
 				managerId: user2Id,
 				subordinates: [dataScientistId]
 			})
-			.expect(204);
+			.expect(200)
+			.then(({ body }) => {
+				expect(body.length).toBeDefined();
+				expect(body.length).toBeGreaterThan(0);
+				expect(body[0].subordinate.id).toBe(dataScientistId);
+				expect(body[0].newManager.id).toBe(user2Id);
+			});
 	});
 
 	it('/api/data-scientist/{id} (GET) - test with new manager', () => {

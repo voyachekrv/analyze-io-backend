@@ -130,6 +130,17 @@ export class UserService {
 	}
 
 	/**
+	 * Проверка на то, является ли пользователь менеджером
+	 * @param id ID пользователя
+	 * @returns Является ли пользователь менеджером
+	 */
+	public async checkManager(id: number): Promise<boolean> {
+		Logger.log(`manager checking ID: ${id}`, this.constructor.name);
+
+		return await this.userRepository.isManager(id);
+	}
+
+	/**
 	 * Удаление пользователей
 	 * @param dto ID сущностей для удаления
 	 */

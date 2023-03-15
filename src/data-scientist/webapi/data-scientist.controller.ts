@@ -27,8 +27,10 @@ import { UserCardDto } from '../../user/dto/user.card.dto';
 import { CreationResultDto } from '../../utils/creation-result.dto';
 import { UserCreateDto } from '../../user/dto/user.create.dto';
 import { SubordinatePatchDto } from '../dto/subordinate.patch.dto';
-import { ManagerGuard } from '../guards/manager.guard';
+import { ManagerGuard } from '../../user/guards/manager.guard';
 import { DeleteDto } from '../../utils/delete.dto';
+import { ManagerChangeResult } from '../types/manager-change-result.type';
+import { SubordinatePatchResultDto } from '../dto/subordinate-patch-result.dto';
 
 /**
  * Контроллер для работы с аналитиками
@@ -126,7 +128,7 @@ export class DataScientistController {
 	}
 
 	@Patch()
-	@HttpCode(204)
+	@HttpCode(200)
 	@UseGuards(RolesGuard, ManagerGuard)
 	@Roles(UserRoles.DATA_SCIENCE_MANAGER, UserRoles.ROOT)
 	@UsePipes(new ValidationPipe())
@@ -135,7 +137,8 @@ export class DataScientistController {
 	})
 	@ApiResponse({
 		description: 'Менеджер переназначен',
-		status: 204
+		status: 200,
+		type: [SubordinatePatchResultDto]
 	})
 	@ApiResponse({
 		status: 400,
@@ -152,8 +155,8 @@ export class DataScientistController {
 	public async changeManager(
 		@Body() dto: SubordinatePatchDto,
 		@Req() request: Request
-	): Promise<void> {
-		await this.dataScientistService.changeManager(
+	): Promise<ManagerChangeResult> {
+		return await this.dataScientistService.changeManager(
 			request['user']['id'],
 			dto
 		);

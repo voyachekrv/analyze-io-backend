@@ -1,4 +1,4 @@
-import { promisifyProcessNoOutput } from '../src/utils/promisify-process';
+import { promisifyProcessNoOutput } from '../../src/utils/promisify-process';
 import { config } from 'dotenv';
 import * as PG from 'pg';
 import * as fs from 'fs';
