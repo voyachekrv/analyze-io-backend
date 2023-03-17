@@ -6,7 +6,9 @@ import {
 	Delete,
 	Get,
 	HttpCode,
+	HttpStatus,
 	Param,
+	ParseBoolPipe,
 	Patch,
 	Post,
 	Put,
@@ -37,12 +39,19 @@ import { DeleteDto } from '../../utils/delete.dto';
 import { ManagerGuard } from '../../user/guards/manager.guard';
 import { ShopPatchDto } from '../dto/shop.patch.dto';
 import { ShopPatchInputDto } from '../dto/shop.patch-input.dto';
+import { ApiImplicitQueries } from 'nestjs-swagger-api-implicit-queries-decorator';
+import { ShopChangeStaffDto } from '../dto/shop.change-staff.dto';
+import { ShopChangeStaffOperation } from '../enums/shop-change-staff-operation';
+import { ShopStaffService } from '../services/shop.staff.service';
 
 @Controller('shop')
 @ApiTags('Интернет-магазины пользователя')
 @ApiBearerAuth()
 export class ShopController {
-	constructor(private readonly shopService: ShopService) {}
+	constructor(
+		private readonly shopService: ShopService,
+		private readonly shopStaffService: ShopStaffService
+	) {}
 
 	/**
 	 * Получение всех магазинов
@@ -113,6 +122,14 @@ export class ShopController {
 	@ApiOperation({
 		summary: 'Получение карточки магазина по его ID'
 	})
+	@ApiImplicitQueries([
+		{
+			name: 'staff',
+			type: Boolean,
+			required: true,
+			description: 'Отображать ли персонал магазина'
+		}
+	])
 	@ApiResponse({
 		type: ShopCardDto,
 		description: 'Карточка магазина',
@@ -132,12 +149,18 @@ export class ShopController {
 	})
 	public async getCard(
 		@Req() request: Request,
-		@Param('id') id: number
+		@Param('id') id: number,
+		@Query(
+			'staff',
+			new ParseBoolPipe({ errorHttpStatusCode: HttpStatus.BAD_REQUEST })
+		)
+		staff: boolean
 	): Promise<ShopCardDto> {
 		if (!isNaN(Number(id))) {
 			return await this.shopService.findById(
 				request['user']['id'],
-				Number(id)
+				Number(id),
+				staff
 			);
 		}
 		throw new BadRequestException();
@@ -256,11 +279,71 @@ export class ShopController {
 		@Body() dto: ShopPatchInputDto,
 		@Param('id') id: number
 	): Promise<ShopPatchDto> {
-		return await this.shopService.changeOwner(
+		return await this.shopStaffService.changeOwner(
 			req['user']['id'],
 			Number(id),
 			dto.managerId
 		);
+	}
+
+	/**
+	 * Смена владельца магазина
+	 * @param id ID магазина
+	 * @param req HTTP Request
+	 * @param dto DTO обновления
+	 * @returns данные обновленной сущности
+	 */
+	@Patch(':id/staff')
+	@HttpCode(200)
+	@UseGuards(RolesGuard)
+	@Roles(UserRoles.DATA_SCIENCE_MANAGER, UserRoles.ROOT)
+	@UsePipes(new ValidationPipe())
+	@ApiOperation({
+		summary: 'Добавление / Удаление персонала магазина'
+	})
+	@ApiImplicitQueries([
+		{
+			name: 'operation',
+			enum: ['add', 'remove'],
+			required: true
+		}
+	])
+	@ApiResponse({
+		description: 'ID созданного магазина',
+		status: 200,
+		type: ShopPatchDto
+	})
+	@ApiResponse({
+		status: 400,
+		description: 'Bad request'
+	})
+	@ApiResponse({
+		status: 403,
+		description: 'Forbidden'
+	})
+	@ApiResponse({
+		status: 404,
+		description: 'Not Found'
+	})
+	public changeStaff(
+		@Req() req: Request,
+		@Body() dto: ShopChangeStaffDto,
+		@Param('id') id: number,
+		@Query('operation') operation: ShopChangeStaffOperation
+	): Promise<ShopCardDto> {
+		if (
+			operation !== ShopChangeStaffOperation.add &&
+			operation !== ShopChangeStaffOperation.remove
+		) {
+			throw new BadRequestException('Операция ожидается: add или remove');
+		} else {
+			return this.shopStaffService.changeDataScientists(
+				id,
+				req['user']['id'],
+				dto.dataScientistIds,
+				operation
+			);
+		}
 	}
 
 	/**

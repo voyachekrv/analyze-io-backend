@@ -8,6 +8,8 @@ import { Injectable } from '@nestjs/common';
 import { UserRepository } from '../../user/repositories/user.repository';
 import { ShopPatchDto } from '../dto/shop.patch.dto';
 import { UserMapper } from '../../user/mappers/user.mapper';
+import { ShopChangeStaffResultDto } from '../dto/shop.change-staff.result.dto';
+import { UserItemDto } from 'src/user/dto/user.item.dto';
 
 /**
  * Маппер для сущности Магазин
@@ -40,7 +42,28 @@ export class ShopMapper {
 	 * @returns DTO карточки
 	 */
 	public toCardDto(entity: Shop): ShopCardDto {
-		return new ShopCardDto(entity.id, entity.name, entity.uuid);
+		if (entity.analytics !== undefined) {
+			const staff: UserItemDto[] = [];
+
+			entity.analytics.forEach(e => {
+				staff.push(this.userMapper.toItemDto(e));
+			});
+
+			return new ShopCardDto(
+				entity.id,
+				entity.name,
+				entity.uuid,
+				this.userMapper.toItemDto(entity.user),
+				staff
+			);
+		}
+
+		return new ShopCardDto(
+			entity.id,
+			entity.name,
+			entity.uuid,
+			this.userMapper.toItemDto(entity.user)
+		);
 	}
 
 	/**
@@ -62,6 +85,21 @@ export class ShopMapper {
 			this.toItemDto(entity),
 			this.userMapper.toItemDto(entity.user)
 		);
+	}
+
+	/**
+	 * Конвертация в DTO результата операции изменения персонала
+	 * @param entity Сущность Магазин
+	 * @returns DTO результата операции изменения персонала
+	 */
+	public toChangeStaffResultDto(entity: Shop): ShopChangeStaffResultDto {
+		const staff: UserItemDto[] = [];
+
+		entity.analytics.forEach(e => {
+			staff.push(this.userMapper.toItemDto(e));
+		});
+
+		return new ShopChangeStaffResultDto(entity, staff);
 	}
 
 	/**

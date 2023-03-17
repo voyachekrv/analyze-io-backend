@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { UserRoles } from '../entities/user.entity';
 import { UserItemDto } from './user.item.dto';
+import { ShopItemDto } from 'src/commerce/dto/shop.item.dto';
 
 /**
  * Информация для отображения карточки пользователя
@@ -19,7 +20,8 @@ export class UserCardDto {
 		email: string,
 		name: string,
 		role: UserRoles,
-		manager?: UserItemDto
+		manager?: UserItemDto,
+		shops?: ShopItemDto[]
 	) {
 		this.id = id;
 		this.email = email;
@@ -28,6 +30,10 @@ export class UserCardDto {
 
 		if (manager) {
 			this.manager = manager;
+		}
+
+		if (shops) {
+			this.shops = shops;
 		}
 	}
 
@@ -65,4 +71,11 @@ export class UserCardDto {
 	 */
 	@ApiProperty({ description: 'Менеджер', example: UserItemDto })
 	manager?: UserItemDto;
+
+	@ApiProperty({
+		description: 'Магазины, на которых работает данный сотрудник',
+		example: [ShopItemDto],
+		isArray: true
+	})
+	shops?: ShopItemDto[];
 }

@@ -17,6 +17,11 @@ import { DataScientistMapper } from './mappers/data-scientist.mapper';
 		DataScientistQueriesRepository,
 		DataScientistMapper
 	],
-	controllers: [DataScientistController]
+	controllers: [DataScientistController],
+	exports: [
+		DataScientistService,
+		DataScientistQueriesRepository,
+		DataScientistMapper
+	]
 })
 export class DataScientistModule {}

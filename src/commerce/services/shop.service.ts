@@ -8,17 +8,14 @@ import { ShopUpdateDto } from '../dto/shop.update.dto';
 import { ShopCreateDto } from '../dto/shop.create.dto';
 import { Shop } from '../entities/shop.entity';
 import { DeleteDto } from '../../utils/delete.dto';
-import { ShopPatchDto } from '../dto/shop.patch.dto';
-import { UserRepository } from '../../user/repositories/user.repository';
 
 /**
- * Сервис для работы с пользователями
+ * Сервис для работы с магазинами
  */
 @Injectable()
 export class ShopService {
 	constructor(
 		private readonly shopRepository: ShopRepository,
-		private readonly userRepository: UserRepository,
 		private readonly shopMapper: ShopMapper
 	) {}
 
@@ -48,15 +45,25 @@ export class ShopService {
 	 * @param id ID магазина
 	 * @returns Карточка магазина
 	 */
-	public async findById(userId: number, id: number): Promise<ShopCardDto> {
+	public async findById(
+		userId: number,
+		id: number,
+		staff: boolean
+	): Promise<ShopCardDto> {
 		Logger.log(
 			`finding shop by id, id: ${id}, userId: ${userId}`,
 			this.constructor.name
 		);
 
-		return this.shopMapper.toCardDto(
-			await this.shopRepository.findByIdAndUserId(userId, id)
-		);
+		let shop: Shop;
+
+		if (staff) {
+			shop = await this.shopRepository.findByIdWithStaff(userId, id);
+		} else {
+			shop = await this.shopRepository.findByIdAndUserId(userId, id);
+		}
+
+		return this.shopMapper.toCardDto(shop);
 	}
 
 	/**
@@ -116,7 +123,7 @@ export class ShopService {
 	}
 
 	/**
-	 * Изменение пользователя
+	 * Изменение магазина
 	 * @param userId ID пользователя
 	 * @param id ID пользователя
 	 * @param dto DTO изменения
@@ -136,29 +143,6 @@ export class ShopService {
 			await this.shopRepository.save(
 				await this.shopMapper.update(dto, userId, id)
 			)
-		);
-	}
-
-	/**
-	 * Смена владельца магазина
-	 * @param userId ID текущего владельца
-	 * @param id ID магазина
-	 * @param newOwnerId ID нового владельца магазина
-	 * @returns Результат смены владельца
-	 */
-	public async changeOwner(
-		userId: number,
-		id: number,
-		newOwnerId: number
-	): Promise<ShopPatchDto> {
-		const shop = await this.shopRepository.findByIdAndUserId(userId, id);
-
-		const newOwner = await this.userRepository.findById(newOwnerId);
-
-		shop.user = newOwner;
-
-		return this.shopMapper.toPatchResultDto(
-			await this.shopRepository.save(shop)
 		);
 	}
 

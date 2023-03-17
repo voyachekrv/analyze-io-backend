@@ -6,6 +6,7 @@ import { UserUpdateDto } from '../dto/user.update.dto';
 import { User, UserRoles } from '../entities/user.entity';
 import { UserRepository } from '../repositories/user.repository';
 import { PasswordService } from '../services/password.service';
+import { ShopItemDto } from 'src/commerce/dto/shop.item.dto';
 
 /**
  * Маппер сущности "Пользователь"
@@ -46,6 +47,16 @@ export class UserMapper {
 		if (entity.manager) {
 			dto.manager = this.toItemDto(entity.manager);
 		}
+
+		const shops: ShopItemDto[] = [];
+
+		if (entity.shops) {
+			entity.shops.forEach(e => {
+				shops.push(new ShopItemDto(e.id, e.name));
+			});
+		}
+
+		dto.shops = shops;
 
 		return dto;
 	}

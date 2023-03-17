@@ -9,6 +9,7 @@ import { SubordinatePatchDto } from '../dto/subordinate.patch.dto';
 import { DeleteDto } from '../../utils/delete.dto';
 import { ManagerChangeResult } from '../types/manager-change-result.type';
 import { DataScientistMapper } from '../mappers/data-scientist.mapper';
+import { DataSource } from 'typeorm';
 
 /**
  * Сервис для работы с аналитиками
@@ -23,7 +24,8 @@ export class DataScientistService {
 	constructor(
 		private readonly dataScientistQueriesRepository: DataScientistQueriesRepository,
 		private readonly userMapper: UserMapper,
-		private readonly dataScientistMapper: DataScientistMapper
+		private readonly dataScientistMapper: DataScientistMapper,
+		private readonly dataSource: DataSource
 	) {}
 
 	/**
@@ -121,6 +123,27 @@ export class DataScientistService {
 		const result = await this.dataScientistQueriesRepository.save(
 			patchCandidates
 		);
+
+		const queryRunner = await this.dataSource.createQueryRunner();
+		await queryRunner.startTransaction();
+
+		try {
+			await queryRunner.query(`
+				DELETE FROM usr.user_shops_shop WHERE "userId" IN (${dto.subordinates.join(
+					', '
+				)});
+			`);
+			await queryRunner.query(`
+				DELETE FROM commerce.shop_analytics_user WHERE "userId" IN (${dto.subordinates.join(
+					', '
+				)});
+			`);
+			await queryRunner.commitTransaction();
+		} catch (error) {
+			await queryRunner.rollbackTransaction();
+		} finally {
+			await queryRunner.release();
+		}
 
 		result.forEach(entity => {
 			Logger.log(

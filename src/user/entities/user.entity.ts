@@ -1,11 +1,14 @@
 /* eslint-disable no-use-before-define */
+import { Shop } from 'src/commerce/entities/shop.entity';
 import { PostgresSchemas } from '../../db/postgres.schemas';
 import {
 	Column,
 	Entity,
 	PrimaryGeneratedColumn,
 	ManyToOne,
-	JoinColumn
+	JoinColumn,
+	ManyToMany,
+	JoinTable
 } from 'typeorm';
 
 /**
@@ -45,7 +48,8 @@ export class User {
 		password: string,
 		name: string,
 		manager?: User,
-		role?: UserRoles
+		role?: UserRoles,
+		shops?: Shop[]
 	) {
 		this.email = email;
 		this.password = password;
@@ -57,6 +61,10 @@ export class User {
 
 		if (role) {
 			this.role = role;
+		}
+
+		if (shops) {
+			this.shops = shops;
 		}
 	}
 
@@ -99,4 +107,16 @@ export class User {
 		referencedColumnName: 'id'
 	})
 	manager: User;
+
+	/**
+	 * Магазины, на которых работает аналитик
+	 */
+	@ManyToMany(() => Shop, shop => shop.analytics, {
+		nullable: true
+	})
+	@JoinTable({
+		schema: 'commerce',
+		name: 'shop_analytics_user'
+	})
+	shops: Shop[];
 }

@@ -41,6 +41,7 @@ export class DataScientistQueriesRepository extends Repository<User> {
 		ids: number[]
 	): Promise<User[]> {
 		return await this.createQueryBuilder('user')
+			.leftJoinAndSelect('user.shops', 'shop')
 			.where('user.manager_id = :managerId', { managerId })
 			.andWhereInIds(ids)
 			.getMany();
@@ -75,6 +76,7 @@ export class DataScientistQueriesRepository extends Repository<User> {
 	): Promise<User> {
 		const entity = await this.createQueryBuilder('user')
 			.leftJoinAndSelect('user.manager', 'manager')
+			.leftJoinAndSelect('user.shops', 'shop')
 			.where('user.manager_id = :managerId', { managerId })
 			.andWhere('user.id = :id', { id: userId })
 			.getOne();

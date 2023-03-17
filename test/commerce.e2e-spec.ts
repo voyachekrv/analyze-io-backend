@@ -188,7 +188,7 @@ describe('ShopController & ResourceController (e2e)', () => {
 	 */
 	it('/api/shop/{id} (GET) - success', () => {
 		return request(app.getHttpServer())
-			.get(`/shop/${shopId}`)
+			.get(`/shop/${shopId}?staff=false`)
 			.set('Authorization', `Bearer ${userToken}`)
 			.expect(200)
 			.then(({ body }: request.Response) => {
