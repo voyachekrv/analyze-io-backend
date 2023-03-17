@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Page } from '../../utils/page';
 import { Repository } from 'typeorm';
 import { format } from 'util';
-import { User } from '../entities/user.entity';
+import { User, UserRoles } from '../entities/user.entity';
 import { UserStrings } from '../user.strings';
 import {
 	UserPaginator,
@@ -91,6 +91,7 @@ export class UserRepository extends Repository<User> {
 	 */
 	public async findOneOr404(id: number): Promise<User> {
 		const entity = await this.createQueryBuilder('user')
+			.leftJoinAndSelect('user.manager', 'manager')
 			.where({ id })
 			.getOne();
 
@@ -105,5 +106,24 @@ export class UserRepository extends Repository<User> {
 		}
 
 		return entity;
+	}
+
+	/**
+	 * Проверка на то, является ли пользователь менеджером
+	 * @param id ID пользователя
+	 * @returns Является ли пользователь менеджером
+	 */
+	public async isManager(id: number): Promise<boolean> {
+		try {
+			const entity = await this.findOneOr404(id);
+
+			if (entity.role === UserRoles.DATA_SCIENCE_MANAGER) {
+				return true;
+			}
+
+			return false;
+		} catch (e) {
+			return false;
+		}
 	}
 }

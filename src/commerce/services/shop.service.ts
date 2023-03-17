@@ -10,7 +10,7 @@ import { Shop } from '../entities/shop.entity';
 import { DeleteDto } from '../../utils/delete.dto';
 
 /**
- * Сервис для работы с пользователями
+ * Сервис для работы с магазинами
  */
 @Injectable()
 export class ShopService {
@@ -45,15 +45,25 @@ export class ShopService {
 	 * @param id ID магазина
 	 * @returns Карточка магазина
 	 */
-	public async findById(userId: number, id: number): Promise<ShopCardDto> {
+	public async findById(
+		userId: number,
+		id: number,
+		staff: boolean
+	): Promise<ShopCardDto> {
 		Logger.log(
 			`finding shop by id, id: ${id}, userId: ${userId}`,
 			this.constructor.name
 		);
 
-		return this.shopMapper.toCardDto(
-			await this.shopRepository.findByIdAndUserId(userId, id)
-		);
+		let shop: Shop;
+
+		if (staff) {
+			shop = await this.shopRepository.findByIdWithStaff(userId, id);
+		} else {
+			shop = await this.shopRepository.findByIdAndUserId(userId, id);
+		}
+
+		return this.shopMapper.toCardDto(shop);
 	}
 
 	/**
@@ -113,7 +123,7 @@ export class ShopService {
 	}
 
 	/**
-	 * Изменение пользователя
+	 * Изменение магазина
 	 * @param userId ID пользователя
 	 * @param id ID пользователя
 	 * @param dto DTO изменения
@@ -143,7 +153,7 @@ export class ShopService {
 	 */
 	public async remove(userId: number, dto: DeleteDto): Promise<void> {
 		Logger.log(
-			`delete users, user: ${userId}, ids: ${dto.ids.join(', ')}`,
+			`delete shops, user: ${userId}, ids: ${dto.ids.join(', ')}`,
 			this.constructor.name
 		);
 

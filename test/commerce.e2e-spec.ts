@@ -1,8 +1,8 @@
 import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
-import { testNestApplication } from './test-prepared';
-import { ShopCreateDto } from '@commerce/dto/shop.create.dto';
-import { ShopUpdateDto } from '@commerce/dto/shop.update.dto';
+import { testNestApplication } from './configuration/test-prepared';
+import { ShopCreateDto } from '../src/commerce/dto/shop.create.dto';
+import { ShopUpdateDto } from '../src/commerce/dto/shop.update.dto';
 import * as path from 'path';
 import * as fs from 'fs';
 import { ConfigService } from '@nestjs/config';
@@ -21,6 +21,10 @@ describe('ShopController & ResourceController (e2e)', () => {
 	 */
 	let userToken;
 
+	let userToken2;
+
+	let userId2;
+
 	/**
 	 * Токен root-пользователя
 	 */
@@ -31,6 +35,11 @@ describe('ShopController & ResourceController (e2e)', () => {
 	 */
 	const userCredentials = {
 		email: 'testuser1@gmail.com',
+		password: 'test1'
+	};
+
+	const userCredentials2 = {
+		email: 'testuser2@gmail.com',
 		password: 'test1'
 	};
 
@@ -104,6 +113,20 @@ describe('ShopController & ResourceController (e2e)', () => {
 	/**
 	 * Авторизация пользователя
 	 */
+	it('/api/user/auth/login (POST) - success (user #2)', () => {
+		return request(app.getHttpServer())
+			.post('/user/auth/login')
+			.send(userCredentials2)
+			.expect(200)
+			.then(({ body }: request.Response) => {
+				expect(body.token).toBeDefined();
+				userToken2 = body.token;
+			});
+	});
+
+	/**
+	 * Авторизация root-пользователя
+	 */
 	it('/api/user/auth/login (POST) - success (root)', () => {
 		return request(app.getHttpServer())
 			.post('/user/auth/login')
@@ -112,6 +135,20 @@ describe('ShopController & ResourceController (e2e)', () => {
 			.then(({ body }: request.Response) => {
 				expect(body.token).toBeDefined();
 				rootToken = body.token;
+			});
+	});
+
+	/**
+	 * Авторизация root-пользователя
+	 */
+	it('/api/user/auth/whois (POST) - success (user #2)', () => {
+		return request(app.getHttpServer())
+			.post('/user/auth/whois')
+			.set('Authorization', `Bearer ${userToken2}`)
+			.expect(200)
+			.then(({ body }: request.Response) => {
+				expect(body.id).toBeDefined();
+				userId2 = body.id;
 			});
 	});
 
@@ -151,7 +188,7 @@ describe('ShopController & ResourceController (e2e)', () => {
 	 */
 	it('/api/shop/{id} (GET) - success', () => {
 		return request(app.getHttpServer())
-			.get(`/shop/${shopId}`)
+			.get(`/shop/${shopId}?staff=false`)
 			.set('Authorization', `Bearer ${userToken}`)
 			.expect(200)
 			.then(({ body }: request.Response) => {
@@ -196,12 +233,28 @@ describe('ShopController & ResourceController (e2e)', () => {
 	});
 
 	/**
+	 * Тест смены владельца магазина
+	 */
+	it('/api/shop/{id}/owner (PATCH) - success', () => {
+		return request(app.getHttpServer())
+			.patch(`/shop/${shopId}/owner`)
+			.set('Authorization', `Bearer ${userToken}`)
+			.send({ managerId: userId2 })
+			.expect(200)
+			.then(({ body }: request.Response) => {
+				expect(body).toBeDefined();
+				expect(body.shop.id).toBe(shopId);
+				expect(body.newOwner.id).toBe(userId2);
+			});
+	});
+
+	/**
 	 * Тест получения строки подключения к скрипту мониторинга
 	 */
 	it('/api/resource/monitor/connection-string/{uuid} (GET) - success', () => {
 		return request(app.getHttpServer())
 			.get(`/resource/monitor/connection-string/${shopUUID}`)
-			.set('Authorization', `Bearer ${userToken}`)
+			.set('Authorization', `Bearer ${userToken2}`)
 			.expect(200)
 			.then(({ body }: request.Response) => {
 				expect(body).toBeDefined();
@@ -254,7 +307,7 @@ describe('ShopController & ResourceController (e2e)', () => {
 
 		return request(app.getHttpServer())
 			.delete('/shop')
-			.set('Authorization', `Bearer ${userToken}`)
+			.set('Authorization', `Bearer ${userToken2}`)
 			.send(deleteData)
 			.expect(204);
 	});

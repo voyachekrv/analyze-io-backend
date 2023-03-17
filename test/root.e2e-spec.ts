@@ -1,6 +1,6 @@
 import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
-import { testNestApplication } from './test-prepared';
+import { testNestApplication } from './configuration/test-prepared';
 
 /**
  * Тест работы root-пользователя

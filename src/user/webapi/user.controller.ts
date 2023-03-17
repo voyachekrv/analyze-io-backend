@@ -55,7 +55,7 @@ export class UserController {
 	 */
 	@Get()
 	@UseGuards(RolesGuard, ValidateQueryParamGuard)
-	@Roles(UserRoles.USER, UserRoles.ROOT)
+	@Roles(UserRoles.DATA_SCIENCE_MANAGER, UserRoles.ROOT)
 	@ApiOperation({
 		summary: 'Получение списка пользователей'
 	})
@@ -112,7 +112,7 @@ export class UserController {
 	 */
 	@Get('roles')
 	@UseGuards(RolesGuard)
-	@Roles(UserRoles.USER, UserRoles.ROOT)
+	@Roles(UserRoles.DATA_SCIENCE_MANAGER, UserRoles.ROOT)
 	@ApiOperation({
 		summary: 'Получение списка доступных ролей пользователя'
 	})
@@ -136,7 +136,11 @@ export class UserController {
 	 */
 	@Get(':id')
 	@UseGuards(RolesGuard)
-	@Roles(UserRoles.USER, UserRoles.ROOT)
+	@Roles(
+		UserRoles.DATA_SCIENTIST,
+		UserRoles.DATA_SCIENCE_MANAGER,
+		UserRoles.ROOT
+	)
 	@ApiOperation({
 		summary: 'Получение карточки пользователя по его ID'
 	})
@@ -172,7 +176,11 @@ export class UserController {
 	 */
 	@Get(':id/edit')
 	@UseGuards(RolesGuard, OnlyOwnerGetForUpdateGuard)
-	@Roles(UserRoles.USER, UserRoles.ROOT)
+	@Roles(
+		UserRoles.DATA_SCIENTIST,
+		UserRoles.DATA_SCIENCE_MANAGER,
+		UserRoles.ROOT
+	)
 	@ApiOperation({
 		summary: 'Получение информации для обновления пользователя'
 	})
@@ -246,7 +254,11 @@ export class UserController {
 	@Put(':id')
 	@UsePipes(new ValidationPipe())
 	@UseGuards(RolesGuard, OnlyOwnerGuard)
-	@Roles(UserRoles.USER, UserRoles.ROOT)
+	@Roles(
+		UserRoles.DATA_SCIENTIST,
+		UserRoles.DATA_SCIENCE_MANAGER,
+		UserRoles.ROOT
+	)
 	@ApiOperation({
 		summary: 'Обновление данных о пользователе'
 	})
@@ -283,7 +295,11 @@ export class UserController {
 	@HttpCode(204)
 	@UsePipes(new ValidationPipe())
 	@UseGuards(RolesGuard, OnlyOwnerDeleteGuard)
-	@Roles(UserRoles.USER, UserRoles.ROOT)
+	@Roles(
+		UserRoles.DATA_SCIENTIST,
+		UserRoles.DATA_SCIENCE_MANAGER,
+		UserRoles.ROOT
+	)
 	@ApiOperation({
 		summary: 'Удаление пользователей'
 	})

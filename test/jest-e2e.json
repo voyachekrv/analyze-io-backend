@@ -6,6 +6,6 @@
 	"transform": {
 		"^.+\\.(t|j)s$": "ts-jest"
 	},
-	"globalSetup": "./jest-global-setup.ts",
-	"globalTeardown": "./jest-global-teardown.ts"
+	"globalSetup": "./configuration/jest-global-setup.ts",
+	"globalTeardown": "./configuration/jest-global-teardown.ts"
 }

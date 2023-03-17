@@ -18,7 +18,7 @@ export class UserRolesDto {
 	 */
 	@ApiProperty({
 		description: 'Список ролей пользователя',
-		example: [UserRoles.ROOT, UserRoles.USER],
+		example: [UserRoles.ROOT, UserRoles.DATA_SCIENCE_MANAGER],
 		isArray: true,
 		type: [String]
 	})

@@ -5,6 +5,8 @@ import {
 	Column,
 	Entity,
 	JoinColumn,
+	JoinTable,
+	ManyToMany,
 	ManyToOne,
 	PrimaryGeneratedColumn
 } from 'typeorm';
@@ -40,7 +42,7 @@ export class Shop {
 	id: number;
 
 	/**
-	 * Владелец
+	 * Менеджер аналитики
 	 */
 	@ManyToOne(() => User, {
 		onDelete: 'CASCADE'
@@ -59,6 +61,21 @@ export class Shop {
 	 */
 	@Column({ type: 'char', length: 36 })
 	uuid: string;
+
+	/**
+	 * Аналитики, работающие на магазине
+	 */
+	@ManyToMany(() => User, user => user.shops, {
+		nullable: true,
+		eager: true,
+		lazy: false,
+		cascade: true
+	})
+	@JoinTable({
+		schema: 'usr',
+		name: 'user_shops_shop'
+	})
+	analytics: User[];
 
 	/**
 	 * Генерация UUID перед вставкой сущности в БД

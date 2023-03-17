@@ -103,7 +103,7 @@ export class UserService {
 		);
 
 		return await this.userRepository.save(
-			this.userMapper.create(dto, role)
+			this.userMapper.create(dto, role, null)
 		);
 	}
 
@@ -127,6 +127,17 @@ export class UserService {
 				await this.userMapper.update(dto, id)
 			)
 		);
+	}
+
+	/**
+	 * Проверка на то, является ли пользователь менеджером
+	 * @param id ID пользователя
+	 * @returns Является ли пользователь менеджером
+	 */
+	public async checkManager(id: number): Promise<boolean> {
+		Logger.log(`manager checking ID: ${id}`, this.constructor.name);
+
+		return await this.userRepository.isManager(id);
 	}
 
 	/**

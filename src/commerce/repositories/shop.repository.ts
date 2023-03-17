@@ -68,7 +68,22 @@ export class ShopRepository extends Repository<Shop> {
 	public async findById(id: number): Promise<Shop> {
 		// eslint-disable-next-line prettier/prettier
 		return await this.createQueryBuilder('shop')
+			.leftJoinAndSelect('shop.user', 'user')
 			.where({ id })
+			.getOne();
+	}
+
+	/**
+	 * Поиск магазина по его ID c аналитиками, работающими на данном магазине
+	 * @param userId ID владельца магазина
+	 * @param id ID магазина
+	 */
+	public async findByIdWithStaff(userId: number, id: number): Promise<Shop> {
+		return await this.createQueryBuilder('shop')
+			.leftJoinAndSelect('shop.user', 'user')
+			.leftJoinAndSelect('shop.analytics', 'user2')
+			.where('shop.user_id = :userId', { userId })
+			.andWhere({ id })
 			.getOne();
 	}
 
@@ -80,6 +95,7 @@ export class ShopRepository extends Repository<Shop> {
 	 */
 	public async findByUUID(uuid: string, userId: number): Promise<Shop> {
 		const entity = await this.createQueryBuilder('shop')
+			.leftJoinAndSelect('shop.user', 'user')
 			.where('shop.user_id = :userId', { userId })
 			.andWhere({ uuid })
 			.getOne();
@@ -105,6 +121,7 @@ export class ShopRepository extends Repository<Shop> {
 	 */
 	public async findByIdAndUserId(userId: number, id: number): Promise<Shop> {
 		const entity = await this.createQueryBuilder('shop')
+			.leftJoinAndSelect('shop.user', 'user')
 			.where({ id })
 			.andWhere('shop.user_id = :userId', { userId })
 			.getOne();
