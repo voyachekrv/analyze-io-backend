@@ -6,7 +6,7 @@ import { UserUpdateDto } from '../dto/user.update.dto';
 import { User, UserRoles } from '../entities/user.entity';
 import { UserRepository } from '../repositories/user.repository';
 import { PasswordService } from '../services/password.service';
-import { ShopItemDto } from 'src/commerce/dto/shop.item.dto';
+import { ShopItemDto } from '../../commerce/dto/shop.item.dto';
 
 /**
  * Маппер сущности "Пользователь"

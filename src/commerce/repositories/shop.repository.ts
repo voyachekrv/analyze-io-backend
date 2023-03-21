@@ -47,6 +47,18 @@ export class ShopRepository extends Repository<Shop> {
 	}
 
 	/**
+	 * Поиск множества магазинов по их ID
+	 * @param ids ID магазинов
+	 * @returns Магазины
+	 */
+	public async findByIds(ids: number[]): Promise<Shop[]> {
+		// eslint-disable-next-line prettier/prettier
+		return await this.createQueryBuilder('shop')
+			.whereInIds(ids)
+			.getMany();
+	}
+
+	/**
 	 * Удаление списка сущностей "Пользователь"
 	 * @param userId ID пользователя
 	 * @param ids ID пользователей для удаления
@@ -69,6 +81,7 @@ export class ShopRepository extends Repository<Shop> {
 		// eslint-disable-next-line prettier/prettier
 		return await this.createQueryBuilder('shop')
 			.leftJoinAndSelect('shop.user', 'user')
+			.leftJoinAndSelect('shop.analytics', 'user2')
 			.where({ id })
 			.getOne();
 	}

@@ -20,6 +20,6 @@ import { ShopStaffService } from './services/shop.staff.service';
 	],
 	controllers: [ShopController],
 	providers: [ShopRepository, ShopService, ShopMapper, ShopStaffService],
-	exports: [ShopService, ShopStaffService]
+	exports: [ShopService, ShopStaffService, ShopRepository, ShopMapper]
 })
 export class CommerceModule {}

@@ -1,5 +1,5 @@
 /* eslint-disable no-use-before-define */
-import { Shop } from 'src/commerce/entities/shop.entity';
+import { Shop } from '../../commerce/entities/shop.entity';
 import { PostgresSchemas } from '../../db/postgres.schemas';
 import {
 	Column,
