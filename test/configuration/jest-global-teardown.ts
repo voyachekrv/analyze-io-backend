@@ -27,6 +27,8 @@ const jestGlobalTeardown = async () => {
 	});
 
 	await pool.query('drop table public.migrations');
+	await pool.query('drop schema "commerce"');
+	await pool.query('drop schema "usr"');
 	await pool.end();
 
 	const resources = path.resolve(process.cwd(), process.env.AIO_FILE_STORAGE);

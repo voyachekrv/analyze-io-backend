@@ -7,6 +7,7 @@ import { CommerceModule } from '../../src/commerce/commerce.module';
 import { ResourceModule } from '../../src/resource/resource.module';
 import { dataSourceTestFactory } from '../../src/db/data-source-factory';
 import { DataScientistModule } from '../../src/data-scientist/data-scientist.module';
+import { ReportModule } from '../../src/report/report.module';
 
 /**
  * Сборка тестового экземпляра приложения
@@ -26,7 +27,8 @@ export const testNestApplication = async (): Promise<INestApplication> => {
 			UserModule,
 			CommerceModule,
 			ResourceModule,
-			DataScientistModule
+			DataScientistModule,
+			ReportModule
 		]
 	}).compile();
 

@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { UserRoles } from '../entities/user.entity';
 import { UserItemDto } from './user.item.dto';
-import { ShopItemDto } from 'src/commerce/dto/shop.item.dto';
+import { ShopItemDto } from '../../commerce/dto/shop.item.dto';
 
 /**
  * Информация для отображения карточки пользователя

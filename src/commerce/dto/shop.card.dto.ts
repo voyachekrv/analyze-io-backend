@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { UserItemDto } from 'src/user/dto/user.item.dto';
+import { UserItemDto } from '../../user/dto/user.item.dto';
 
 /**
  * DTO отображения магазина в карточке
