@@ -1,11 +1,12 @@
 import { Controller, Get, Param } from '@nestjs/common';
 import { MonitorScriptService } from './monitor-script.service';
-import { ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 /**
  * Контроллер для работы со скриптом отслеживания
  */
 @Controller('monitor-script')
+@ApiTags('Строка подключения к скрипту отслеживания')
 export class MonitorScriptController {
 	constructor(private readonly monitorScriptService: MonitorScriptService) {}
 

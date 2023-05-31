@@ -30,19 +30,19 @@ services:
     networks:
       - postgres
 
-  analyze-io-backend:
-    container_name: analyze-io-backend
-    image: analyze-io-backend
-    depends_on:
-      - postgres
-    env_file:
-      - .env
-    ports:
-      - '8000:${AIO_PORT}'
-    volumes:
-      - ${AIO_RESOURCES_VOLUME}:/app/${AIO_FILE_STORAGE}
-    networks:
-      - postgres     
+  #analyze-io-backend:
+  #  container_name: analyze-io-backend
+  #  image: analyze-io-backend
+  #  depends_on:
+  #    - postgres
+  #  env_file:
+  #    - .env
+  #  ports:
+  #    - '8000:${AIO_PORT}'
+  #  volumes:
+  #    - ${AIO_RESOURCES_VOLUME}:/app/${AIO_FILE_STORAGE}
+  #  networks:
+  #    - postgres     
 
 networks:
   postgres:
