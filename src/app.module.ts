@@ -1,3 +1,4 @@
+import { MonitorScriptModule } from './monitor-script/monitor-script.module';
 import { ReportModule } from './report/report.module';
 import { DataScientistModule } from './data-scientist/data-scientist.module';
 import { AvatarToolsModule } from './avatar-tools/avatar-tools.module';
@@ -18,7 +19,8 @@ import { ConfigModule } from '@nestjs/config';
 		DataScientistModule,
 		UserModule,
 		ShopModule,
-		ReportModule
+		ReportModule,
+		MonitorScriptModule
 	]
 })
 export class AppModule {}
