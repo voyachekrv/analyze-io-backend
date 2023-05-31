@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { ShopItemDto } from '../../commerce/dto/shop.item.dto';
-import { UserItemDto } from '../../user/dto/user.item.dto';
+import { ShopItemDto } from '../../shop/dto/shop.item.dto';
+import { UserItemDto } from '../../user/dto/user/user.item.dto';
 import { ReportCardDtoConstructorParams } from '../types/report-card-dto-constructor-params.type';
 
 /**

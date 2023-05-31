@@ -1,12 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { UserCardDto } from '../dto/user.card.dto';
-import { UserCreateDto } from '../dto/user.create.dto';
-import { UserItemDto } from '../dto/user.item.dto';
-import { UserUpdateDto } from '../dto/user.update.dto';
-import { User, UserRoles } from '../entities/user.entity';
-import { UserRepository } from '../repositories/user.repository';
 import { PasswordService } from '../services/password.service';
-import { ShopItemDto } from '../../commerce/dto/shop.item.dto';
+import { UserItemDto } from '../dto/user/user.item.dto';
+import { Prisma, User, UserRole } from '@prisma/client';
+import { UserCardDto } from '../dto/user/user.card.dto';
+import { UserUpdateDto } from '../dto/user/user.update.dto';
+import { UserCreateDto } from '../dto/user/user.create.dto';
 
 /**
  * Маппер сущности "Пользователь"
@@ -17,10 +15,7 @@ export class UserMapper {
 	 * Маппер сущности "Пользователь"
 	 * @param passwordService Сервис работы с паролем
 	 */
-	constructor(
-		private passwordService: PasswordService,
-		private readonly userRepository: UserRepository
-	) {}
+	constructor(private passwordService: PasswordService) {}
 
 	/**
 	 * Конвертация сущности в DTO списка
@@ -28,15 +23,21 @@ export class UserMapper {
 	 * @returns DTO списка
 	 */
 	public toItemDto(entity: User): UserItemDto {
-		return new UserItemDto(entity.id, entity.email, entity.name);
+		return new UserItemDto(
+			entity.id,
+			entity.email,
+			entity.name,
+			entity.avatar
+		);
 	}
 
 	/**
 	 * Конвертация сущности в DTO карточки
 	 * @param entity Сущность
+	 * @param manager Пользователь-менеджер
 	 * @returns DTO карточки
 	 */
-	public toCardDto(entity: User): UserCardDto {
+	public toCardDto(entity: User, manager: User): UserCardDto {
 		const dto = new UserCardDto(
 			entity.id,
 			entity.email,
@@ -44,19 +45,13 @@ export class UserMapper {
 			entity.role
 		);
 
-		if (entity.manager) {
-			dto.manager = this.toItemDto(entity.manager);
+		if (entity.avatar) {
+			dto.avatar = entity.avatar;
 		}
 
-		const shops: ShopItemDto[] = [];
-
-		if (entity.shops) {
-			entity.shops.forEach(e => {
-				shops.push(new ShopItemDto(e.id, e.name));
-			});
+		if (manager) {
+			dto.manager = this.toItemDto(manager);
 		}
-
-		dto.shops = shops;
 
 		return dto;
 	}
@@ -78,31 +73,35 @@ export class UserMapper {
 	 * Конвертация DTO создания в сущность
 	 * @param dto DTO создания пользователя
 	 * @param role Роль пользователя
+	 * @param managerId ID менеджера пользователя
 	 * @returns Сущность "пользователь" (пароль зашифрован)
 	 */
-	public create(dto: UserCreateDto, role: UserRoles, manager?: User): User {
-		return new User(
-			dto.email,
-			this.passwordService.encrypt(dto.password),
-			dto.name,
-			manager,
-			role
-		);
+	public create(
+		dto: UserCreateDto,
+		role: UserRole,
+		managerId?: number
+	): Prisma.UserCreateInput {
+		const entity = {
+			email: dto.email,
+			password: this.passwordService.encrypt(dto.password),
+			name: dto.name,
+			role,
+			managerId
+		};
+
+		return entity;
 	}
 
 	/**
 	 * Конвертация DTO обновления в сущность
 	 * @param dto DTO обновления пользователя
-	 * @param id ID пользователя
 	 * @returns Сущность "пользователь" (пароль зашифрован)
 	 */
-	public async update(dto: UserUpdateDto, id: number): Promise<User> {
-		const entity = await this.userRepository.findById(id);
-
-		entity.email = dto.email;
-		entity.password = this.passwordService.encrypt(dto.password);
-		entity.name = dto.name;
-
-		return entity;
+	public update(dto: UserUpdateDto): unknown {
+		return {
+			email: dto.email,
+			password: this.passwordService.encrypt(dto.password),
+			name: dto.name
+		};
 	}
 }

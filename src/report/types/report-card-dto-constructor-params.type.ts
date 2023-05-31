@@ -1,5 +1,5 @@
-import { ShopItemDto } from '../../commerce/dto/shop.item.dto';
-import { UserItemDto } from '../../user/dto/user.item.dto';
+import { ShopItemDto } from '../../shop/dto/shop.item.dto';
+import { UserItemDto } from '../../user/dto/user/user.item.dto';
 
 /**
  * Именованные параметры конструктора класса ReportCardDto

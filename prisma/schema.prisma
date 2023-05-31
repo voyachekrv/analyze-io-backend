@@ -1,0 +1,66 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Роли пользователя
+enum UserRole {
+  DATA_SCIENCE_MANAGER
+  DATA_SCIENTIST
+}
+
+// Пользователь
+model User {
+  id              Int              @id @default(autoincrement())
+  email           String           @unique @db.VarChar(200)
+  password        String           @db.VarChar(200)
+  name            String           @db.VarChar(300)
+  role            UserRole
+  avatar          String?          @db.VarChar(512)
+  managerId       Int?
+  manager         User?            @relation("ManagerSubordinates", fields: [managerId], references: [id])
+  subordinates    User[]           @relation("ManagerSubordinates")
+  shopsAtOwn      Shop[]           @relation("ShopOwner")
+  shopsAsEmployee AnalystsOnShop[]
+  reports         Report[]         @relation("ReportCreator")
+}
+
+// Магазин
+model Shop {
+  id        Int              @id @default(autoincrement())
+  uuid      String           @unique @db.Char(36)
+  name      String           @db.VarChar(512)
+  avatar    String?          @db.VarChar(512)
+  managerId Int
+  manager   User             @relation("ShopOwner", fields: [managerId], references: [id])
+  employee  AnalystsOnShop[]
+  reports   Report[]         @relation("ReportOnShop")
+}
+
+// Аналитики к магазину
+model AnalystsOnShop {
+  shop      Shop @relation(fields: [shopId], references: [id])
+  shopId    Int
+  analyst   User @relation(fields: [analystId], references: [id])
+  analystId Int
+
+  @@id([shopId, analystId])
+}
+
+// Отчет по анализу данных
+model Report {
+  id            Int      @id @default(autoincrement())
+  createdAt     DateTime @default(now())
+  name          String   @db.VarChar(255)
+  file          String   @db.VarChar(512)
+  comment       String   @db.VarChar(1024)
+  seenByManager Boolean  @default(false)
+  creatorId     Int
+  creator       User     @relation("ReportCreator", fields: [creatorId], references: [id])
+  shopId        Int
+  shop          Shop     @relation("ReportOnShop", fields: [shopId], references: [id])
+}

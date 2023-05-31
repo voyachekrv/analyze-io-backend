@@ -1,27 +1,17 @@
-import { Module } from '@nestjs/common';
-import { UserModule } from '../user/user.module';
-import { DataScientistService } from './services/data-scientist.service';
 import { DataScientistController } from './webapi/data-scientist.controller';
-import { DataScientistQueriesRepository } from './repositories/data-scientist-queries.repository';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { User } from '../user/entities/user.entity';
+import { DataScientistService } from './services/data-scientist.service';
+import { Module } from '@nestjs/common';
 import { DataScientistMapper } from './mappers/data-scientist.mapper';
+import { PrismaService } from '../prisma.service';
+import { UserModule } from '../user/user.module';
 
 /**
  * Модуль для работы с аналитиками
  */
 @Module({
-	imports: [UserModule, TypeOrmModule.forFeature([User])],
-	providers: [
-		DataScientistService,
-		DataScientistQueriesRepository,
-		DataScientistMapper
-	],
+	imports: [UserModule],
 	controllers: [DataScientistController],
-	exports: [
-		DataScientistService,
-		DataScientistQueriesRepository,
-		DataScientistMapper
-	]
+	providers: [DataScientistService, DataScientistMapper, PrismaService],
+	exports: [DataScientistMapper, DataScientistService]
 })
 export class DataScientistModule {}

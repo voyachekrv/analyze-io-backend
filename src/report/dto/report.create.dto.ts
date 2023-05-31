@@ -1,11 +1,25 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { ReportPayload } from '../types/report-payload.type';
-import { IsNotEmpty, IsString, MaxLength } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsString, MaxLength } from 'class-validator';
+import { ReportStrings } from '../report.strings';
 
 /**
  * DTO для создания сущности Отчет
  */
 export class ReportCreateDto {
+	/**
+	 * ID магазина
+	 */
+	@ApiProperty({
+		description: 'ID магазина',
+		example: 123
+	})
+	@IsNumber(
+		{ allowNaN: false, allowInfinity: false, maxDecimalPlaces: 0 },
+		{ message: ReportStrings.SHOULD_BE_NUMBER }
+	)
+	shopId: number;
+
 	/**
 	 * Название отчета
 	 */

@@ -1,6 +1,6 @@
 #TODO: Сделать перед стартом compose команду sudo setfacl --modify user:$USER:rw /var/run/docker.sock
 
-version: "3.9"
+version: '3.9'
 services:
   postgres:
     container_name: analyze-io-db
@@ -8,40 +8,42 @@ services:
     env_file:
       - .env
     volumes:
-      - ./pgdata:/var/lib/postgresql/data
+      - ${AIO_POSTGRES_VOLUME}:/var/lib/postgresql/data
     ports:
-      - "5432:5432"
+      - '${POSTGRES_PORT}:${POSTGRES_PORT}'
     restart: unless-stopped
     networks:
       - postgres
 
   pgadmin:
     container_name: analyze-io-pgadmin
+    depends_on:
+      - postgres
     image: dpage/pgadmin4:5.7
     env_file:
-      - .pgadmin.env
+      - .env
     volumes:
-      - ./pgadmin:/var/lib/pgadmin
+      - ${AIO_PGADMIN_VOLUME}:/var/lib/pgadmin
     ports:
-      - "5050:80"
+      - '5050:80'
     restart: unless-stopped
     networks:
       - postgres
 
   analyze-io-backend:
-    container_name: analyze-io-app
+    container_name: analyze-io-backend
     image: analyze-io-backend
     depends_on:
       - postgres
     env_file:
       - .env
     ports:
-      - "8000:3000"
+      - '8000:${AIO_PORT}'
     volumes:
-      - ./resources:/app/resources
+      - ${AIO_RESOURCES_VOLUME}:/app/${AIO_FILE_STORAGE}
     networks:
-      - postgres  
+      - postgres     
 
 networks:
   postgres:
-    driver: bridge
+    driver: bridge      

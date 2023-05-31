@@ -14,15 +14,14 @@ import {
 	ApiResponse,
 	ApiTags
 } from '@nestjs/swagger';
-import { Request } from 'express';
-import { Roles } from '../decorators/roles-auth.decorator';
-import { TokenInfoDto } from '../dto/token-info.dto';
-import { TokenDto } from '../dto/token.dto';
-import { UserCreateDto } from '../dto/user.create.dto';
-import { UserSignInDto } from '../dto/user.sign-in.dto';
-import { UserRoles } from '../entities/user.entity';
-import { RolesGuard } from '../guards/roles.guard';
 import { AuthService } from '../services/auth.service';
+import { TokenDto } from '../dto/token/token.dto';
+import { UserSignInDto } from '../dto/user/user.sign-in.dto';
+import { UserCreateDto } from '../dto/user/user.create.dto';
+import { RolesGuard } from '../guards/roles.guard';
+import { Roles } from '../decorators/roles-auth.decorator';
+import { TokenInfoDto } from '../dto/token/token-info.dto';
+import { UserRole } from '@prisma/client';
 
 /**
  * Контроллер авторизации пользователя
@@ -34,16 +33,10 @@ export class AuthController {
 	/**
 	 * Контроллер авторизации пользователя
 	 * @param authService Сервис авторизации пользователя
-	 * @param userVerifyService Сервис верификации пользователя
 	 */
 	constructor(private readonly authService: AuthService) {}
 
-	/**
-	 * Авторизация пользователя
-	 * @param dto DTO авторизации
-	 * @returns Токен авторизации
-	 */
-	@Post('/login')
+	@Post('login')
 	@HttpCode(200)
 	@UsePipes(new ValidationPipe())
 	@ApiOperation({
@@ -66,12 +59,7 @@ export class AuthController {
 		return await this.authService.login(dto);
 	}
 
-	/**
-	 * Регистрация пользователя
-	 * @param dto DTO создания пользователя
-	 * @returns Регистрация пользователя и его Токен авторизации
-	 */
-	@Post('/registration')
+	@Post('registration')
 	@UsePipes(new ValidationPipe())
 	@ApiOperation({
 		summary: 'Регистрация пользователя'
@@ -89,19 +77,10 @@ export class AuthController {
 		return await this.authService.register(dto);
 	}
 
-	/**
-	 * Возврат информации о зарегистрированном пользователе
-	 * @param dto DTO токена
-	 * @returns Информации о зарегистрированном пользователе
-	 */
-	@Post('/whois')
+	@Post('whoami')
 	@HttpCode(200)
 	@UseGuards(RolesGuard)
-	@Roles(
-		UserRoles.DATA_SCIENTIST,
-		UserRoles.DATA_SCIENCE_MANAGER,
-		UserRoles.ROOT
-	)
+	@Roles(UserRole.DATA_SCIENTIST, UserRole.DATA_SCIENCE_MANAGER)
 	@UsePipes(new ValidationPipe())
 	@ApiOperation({
 		summary: 'Возврат информации о зарегистрированном пользователе'
@@ -119,7 +98,7 @@ export class AuthController {
 		status: 403,
 		description: 'Forbidden'
 	})
-	public whois(@Req() request: Request): TokenInfoDto {
+	public whoAmI(@Req() request: Request): TokenInfoDto {
 		return new TokenInfoDto(
 			request['user'].id,
 			request['user'].email,

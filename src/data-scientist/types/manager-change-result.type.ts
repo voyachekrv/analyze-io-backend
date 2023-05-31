@@ -1,9 +1,9 @@
-import { SubordinatePatchResultDto } from '../dto/subordinate-patch-result.dto';
+import { SubordinateChangeManagerResultDto } from '../dto/subordinate-change-manager-result.dto';
 
 /**
  * Тип результата смены менеджера у подчиненного -
  * результат может быть в виде массива, или в виде единственной сущности
  */
 export type ManagerChangeResult =
-	| SubordinatePatchResultDto
-	| SubordinatePatchResultDto[];
+	| SubordinateChangeManagerResultDto
+	| SubordinateChangeManagerResultDto[];

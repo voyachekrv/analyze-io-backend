@@ -14,5 +14,6 @@ export enum UserStrings {
 	SHOULD_BE_NOT_EMPTY = 'Строка в данном поле не должна быть пустой',
 	SHOULD_BE_EMAIL = 'Некорректная запись email-адреса',
 	SHOULD_BE_JWT = 'Токен должен быть JWT-токеном',
-	UNAUTHORIZED_USER = 'Пользователь не был авторизирован'
+	UNAUTHORIZED_USER = 'Пользователь не был авторизирован',
+	FORBIDDEN = 'Нет разрешения на осуществление операции'
 }

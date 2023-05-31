@@ -2,39 +2,47 @@ import {
 	BadRequestException,
 	Body,
 	Controller,
-	Delete,
 	Get,
-	HttpCode,
 	Param,
 	Put,
-	Post,
+	Query,
 	UseGuards,
 	UsePipes,
 	ValidationPipe,
-	Query
+	Delete,
+	HttpCode,
+	Patch,
+	UploadedFile,
+	ParseFilePipe,
+	MaxFileSizeValidator,
+	FileTypeValidator,
+	UseInterceptors
 } from '@nestjs/common';
 import {
+	ApiTags,
 	ApiBearerAuth,
-	ApiOperation,
 	ApiResponse,
-	ApiTags
+	ApiOperation,
+	ApiConsumes,
+	ApiBody
 } from '@nestjs/swagger';
-import { Page } from '../../utils/page';
-import { CreationResultDto } from '../../utils/creation-result.dto';
-import { DeleteDto } from '../../utils/delete.dto';
-import { Roles } from '../decorators/roles-auth.decorator';
-import { UserCardDto } from '../dto/user.card.dto';
-import { UserCreateDto } from '../dto/user.create.dto';
-import { UserItemDto } from '../dto/user.item.dto';
-import { UserRolesDto } from '../dto/user.roles.dto';
-import { UserUpdateDto } from '../dto/user.update.dto';
-import { UserRoles } from '../entities/user.entity';
-import { OnlyOwnerDeleteGuard } from '../guards/only-owner-delete.guard';
-import { OnlyOwnerGetForUpdateGuard } from '../guards/only-owner-get-for-update.guard';
-import { OnlyOwnerGuard } from '../guards/only-owner.guard';
-import { RolesGuard } from '../guards/roles.guard';
+import { UserItemDto } from '../dto/user/user.item.dto';
 import { UserService } from '../services/user.service';
-import { ValidateQueryParamGuard } from '../guards/validate-query-param.guard';
+import { UserCardDto } from '../dto/user/user.card.dto';
+import { ApiImplicitQueries } from 'nestjs-swagger-api-implicit-queries-decorator';
+import { RolesGuard } from '../guards/roles.guard';
+import { OnlyOwnerGetForUpdateGuard } from '../guards/only-owner-get-for-update.guard';
+import { Roles } from '../decorators/roles-auth.decorator';
+import { UserRole } from '@prisma/client';
+import { UserUpdateDto } from '../dto/user/user.update.dto';
+import { UserRolesDto } from '../dto/user/user.roles.dto';
+import { OnlyOwnerDeleteGuard } from '../guards/only-owner-delete.guard';
+import { DeleteDto } from '../../utils/delete.dto';
+import { OnlyOwnerGuard } from '../guards/only-owner.guard';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { UserAvatarService } from '../services/user-avatar.service';
+import { AvatarPath } from '../../utils/avatar-path.type';
+import { mapQueryToFindParams } from '../user.search-mapping';
 
 /**
  * Контроллер для работы с пользователями
@@ -46,44 +54,47 @@ export class UserController {
 	/**
 	 * Контроллер для работы с пользователями
 	 * @param userService Сервис для работы с пользователями
+	 * @param userAvatarService Сервис для работы с аватарами
 	 */
-	constructor(private readonly userService: UserService) {}
+	constructor(
+		private readonly userService: UserService,
+		private readonly userAvatarService: UserAvatarService
+	) {}
 
-	/**
-	 * Получение всех пользователей
-	 * @returns Список пользователей
-	 */
 	@Get()
-	@UseGuards(RolesGuard, ValidateQueryParamGuard)
-	@Roles(UserRoles.DATA_SCIENCE_MANAGER, UserRoles.ROOT)
+	@UseGuards(RolesGuard)
+	@Roles(UserRole.DATA_SCIENCE_MANAGER, UserRole.DATA_SCIENTIST)
 	@ApiOperation({
 		summary: 'Получение списка пользователей'
 	})
-	@ApiResponse({
-		schema: {
-			type: 'object',
-			properties: {
-				list: {
-					type: 'array',
-					items: {
-						type: 'object',
-						properties: {
-							id: { type: 'number', example: 1 },
-							email: { type: 'string', example: 'john@doe.com' },
-							name: { type: 'string', example: 'Jonh Doe' }
-						}
-					}
-				},
-				first: { type: 'number', example: 0 },
-				total: { type: 'number', example: 7 },
-				totalPages: { type: 'number', example: 4 },
-				totalOnPage: { type: 'number', example: 7 },
-				current: { type: 'number', example: 4 },
-				last: { type: 'number', example: 3 },
-				previous: { type: 'number', example: 3 },
-				next: { type: 'number', example: 5 }
-			}
+	@ApiImplicitQueries([
+		{
+			name: 'take',
+			required: false,
+			description: 'Количество записей для взятия (по умолчанию 10)',
+			type: Number
 		},
+		{
+			name: 'skip',
+			required: false,
+			description: 'Количество записей для пропуска',
+			type: Number
+		},
+		{
+			name: 'where',
+			required: false,
+			description: 'Where-запрос в формате Prisma',
+			type: String
+		},
+		{
+			name: 'orderBy',
+			required: false,
+			description: 'OrderBy-запрос в формате Prisma',
+			type: String
+		}
+	])
+	@ApiResponse({
+		type: [UserItemDto],
 		description: 'Список пользователей',
 		status: 200
 	})
@@ -95,24 +106,20 @@ export class UserController {
 		status: 403,
 		description: 'Forbidden'
 	})
-	@ApiResponse({
-		status: 404,
-		description: 'В случае обращения к несуществующему номеру страницы'
-	})
-	// TODO: Сделать параметры для поиска и order by
 	public async index(
-		@Query('page') page: number
-	): Promise<Page<UserItemDto>> {
-		return await this.userService.findAll(Number(page));
+		@Query('skip') skip?: number,
+		@Query('where') where?: string,
+		@Query('orderBy') orderBy?: string,
+		@Query('take') take = 10
+	): Promise<UserItemDto[]> {
+		return await this.userService.findAll(
+			mapQueryToFindParams(take, skip, where, orderBy)
+		);
 	}
 
-	/**
-	 * Получение списка всех доступных ролей в системе
-	 * @returns Возможные роли пользователя
-	 */
 	@Get('roles')
 	@UseGuards(RolesGuard)
-	@Roles(UserRoles.DATA_SCIENCE_MANAGER, UserRoles.ROOT)
+	@Roles(UserRole.DATA_SCIENCE_MANAGER)
 	@ApiOperation({
 		summary: 'Получение списка доступных ролей пользователя'
 	})
@@ -129,18 +136,9 @@ export class UserController {
 		return this.userService.getRoles();
 	}
 
-	/**
-	 * Получение карточки пользователя
-	 * @param id ID пользователя
-	 * @returns Карточка пользователя
-	 */
 	@Get(':id')
 	@UseGuards(RolesGuard)
-	@Roles(
-		UserRoles.DATA_SCIENTIST,
-		UserRoles.DATA_SCIENCE_MANAGER,
-		UserRoles.ROOT
-	)
+	@Roles(UserRole.DATA_SCIENCE_MANAGER, UserRole.DATA_SCIENTIST)
 	@ApiOperation({
 		summary: 'Получение карточки пользователя по его ID'
 	})
@@ -165,22 +163,13 @@ export class UserController {
 		if (!isNaN(Number(id))) {
 			return await this.userService.findById(Number(id));
 		}
+
 		throw new BadRequestException();
 	}
 
-	/**
-	 * Получение информации для обновления пользователя
-	 * @param id ID пользователя
-	 * @param req HTTP Request
-	 * @returns DTO обновления
-	 */
 	@Get(':id/edit')
 	@UseGuards(RolesGuard, OnlyOwnerGetForUpdateGuard)
-	@Roles(
-		UserRoles.DATA_SCIENTIST,
-		UserRoles.DATA_SCIENCE_MANAGER,
-		UserRoles.ROOT
-	)
+	@Roles(UserRole.DATA_SCIENTIST, UserRole.DATA_SCIENCE_MANAGER)
 	@ApiOperation({
 		summary: 'Получение информации для обновления пользователя'
 	})
@@ -207,58 +196,14 @@ export class UserController {
 		if (!isNaN(Number(id))) {
 			return await this.userService.findForUpdate(Number(id));
 		}
+
 		throw new BadRequestException();
 	}
 
-	/**
-	 * Создание суперпользователя (только для других суперпользователей)
-	 * @param dto DTO создания пользователя
-	 * @returns ID созданной сущности
-	 */
-	@Post()
-	@UseGuards(RolesGuard)
-	@Roles(UserRoles.ROOT)
-	@UsePipes(new ValidationPipe())
-	@ApiOperation({
-		summary:
-			'Создание суперпользователя (только для других суперпользователей)'
-	})
-	@ApiResponse({
-		description: 'ID созданного суперпользователя',
-		status: 201,
-		type: CreationResultDto
-	})
-	@ApiResponse({
-		status: 400,
-		description: 'Bad request'
-	})
-	@ApiResponse({
-		status: 403,
-		description: 'Forbidden'
-	})
-	public async create(
-		@Body() dto: UserCreateDto
-	): Promise<CreationResultDto> {
-		return new CreationResultDto(
-			(await this.userService.create(dto, UserRoles.ROOT)).id
-		);
-	}
-
-	/**
-	 * Обвновление пользователя
-	 * @param id ID пользователя
-	 * @param req HTTP Request
-	 * @param dto DTO обновления
-	 * @returns ID обновленной сущности
-	 */
 	@Put(':id')
 	@UsePipes(new ValidationPipe())
 	@UseGuards(RolesGuard, OnlyOwnerGuard)
-	@Roles(
-		UserRoles.DATA_SCIENTIST,
-		UserRoles.DATA_SCIENCE_MANAGER,
-		UserRoles.ROOT
-	)
+	@Roles(UserRole.DATA_SCIENTIST, UserRole.DATA_SCIENCE_MANAGER)
 	@ApiOperation({
 		summary: 'Обновление данных о пользователе'
 	})
@@ -283,23 +228,65 @@ export class UserController {
 		@Param('id') id: number,
 		@Body() dto: UserUpdateDto
 	): Promise<UserUpdateDto> {
-		return await this.userService.update(id, dto);
+		if (!isNaN(Number(id))) {
+			return await this.userService.update(Number(id), dto);
+		}
+
+		throw new BadRequestException();
 	}
 
-	/**
-	 * Удаление пользователей
-	 * @param req HTTP Request
-	 * @param dto DTO удаления
-	 */
+	@Patch(':id/avatar')
+	@HttpCode(200)
+	@UseInterceptors(FileInterceptor('file'))
+	@UseGuards(RolesGuard, OnlyOwnerGetForUpdateGuard)
+	@Roles(UserRole.DATA_SCIENTIST, UserRole.DATA_SCIENCE_MANAGER)
+	@ApiOperation({
+		summary: 'Загрузка аватара пользователя'
+	})
+	@ApiConsumes('multipart/form-data')
+	@ApiBody({
+		schema: {
+			type: 'object',
+			properties: {
+				file: {
+					type: 'string',
+					format: 'binary'
+				}
+			}
+		}
+	})
+	@ApiResponse({
+		description: 'Файл был загружен',
+		status: 200
+	})
+	public async uploadAvatar(
+		@Param('id') id: number,
+		@UploadedFile(
+			'file',
+			new ParseFilePipe({
+				validators: [
+					new MaxFileSizeValidator({ maxSize: 1000 * 1024 }),
+					new FileTypeValidator({ fileType: /image\/(png|jpeg)$/ })
+				]
+			})
+		)
+		file: Express.Multer.File
+	): Promise<AvatarPath> {
+		if (!isNaN(Number(id))) {
+			return await this.userAvatarService.loadUserAvatar(
+				file,
+				Number(id)
+			);
+		}
+
+		throw new BadRequestException();
+	}
+
 	@Delete()
 	@HttpCode(204)
 	@UsePipes(new ValidationPipe())
 	@UseGuards(RolesGuard, OnlyOwnerDeleteGuard)
-	@Roles(
-		UserRoles.DATA_SCIENTIST,
-		UserRoles.DATA_SCIENCE_MANAGER,
-		UserRoles.ROOT
-	)
+	@Roles(UserRole.DATA_SCIENTIST, UserRole.DATA_SCIENCE_MANAGER)
 	@ApiOperation({
 		summary: 'Удаление пользователей'
 	})

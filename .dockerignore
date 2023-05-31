@@ -2,8 +2,5 @@ node_modules
 dist
 .git
 .env
-.env.test
-.pgadmin.env
-pgadmin
-pgdata
-resources-test
+volumes
+resources

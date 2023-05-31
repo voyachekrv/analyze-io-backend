@@ -5,9 +5,8 @@ import {
 	ForbiddenException
 } from '@nestjs/common';
 import { Observable } from 'rxjs';
-import { UserRoles } from '../entities/user.entity';
-import { UserRequestData } from '../types';
 import { UserStrings } from '../user.strings';
+import { UserRequestData } from '../dto/token/user-request-data.type';
 
 /**
  * Проверка на осуществление операции с сущностью пользователя
@@ -32,12 +31,8 @@ export class OnlyOwnerGuard implements CanActivate {
 		const url = context.switchToHttp().getRequest().url as string;
 		const userIdFromRequest = Number(url.split('/').at(-1));
 
-		if (user.role !== UserRoles.ROOT) {
-			if (user.id !== userIdFromRequest) {
-				throw new ForbiddenException(UserStrings.CANNOT_PERMITE);
-			} else {
-				return true;
-			}
+		if (user.id !== userIdFromRequest) {
+			throw new ForbiddenException(UserStrings.CANNOT_PERMITE);
 		} else {
 			return true;
 		}
