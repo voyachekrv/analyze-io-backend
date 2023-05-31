@@ -6,12 +6,17 @@ import {
 } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { UserService } from '../services/user.service';
+import { UserStrings } from '../user.strings';
 
 /**
  * Проверка ID нового менеджера аналитики
  */
 @Injectable()
 export class ManagerGuard implements CanActivate {
+	/**
+	 * Проверка ID нового менеджера аналитики
+	 * @param userService Сервис пользователя
+	 */
 	constructor(private userService: UserService) {}
 
 	canActivate(
@@ -32,9 +37,7 @@ export class ManagerGuard implements CanActivate {
 					});
 			});
 		} catch (e) {
-			throw new ForbiddenException(
-				'Нет разрешения на осуществление операции'
-			);
+			throw new ForbiddenException(UserStrings.FORBIDDEN);
 		}
 	}
 }

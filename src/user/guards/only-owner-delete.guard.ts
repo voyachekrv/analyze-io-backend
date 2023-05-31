@@ -5,10 +5,9 @@ import {
 	ForbiddenException
 } from '@nestjs/common';
 import { Observable } from 'rxjs';
-import { DeleteDto } from 'src/utils/delete.dto';
-import { UserRoles } from '../entities/user.entity';
-import { UserRequestData } from '../types';
+import { DeleteDto } from '../../utils/delete.dto';
 import { UserStrings } from '../user.strings';
+import { UserRequestData } from '../dto/token/user-request-data.type';
 
 /**
  * Проверка на удаление пользователя либо самим пользователем, либо root-пользователем
@@ -30,14 +29,8 @@ export class OnlyOwnerDeleteGuard implements CanActivate {
 			.user as UserRequestData;
 		const body = context.switchToHttp().getRequest().body as DeleteDto;
 
-		if (user.role !== UserRoles.ROOT) {
-			if (!body?.ids.includes(user.id) || body?.ids.length > 1) {
-				throw new ForbiddenException(
-					UserStrings.CANNOT_DELETE_THIS_USER
-				);
-			} else {
-				return true;
-			}
+		if (!body?.ids.includes(user.id) || body?.ids.length > 1) {
+			throw new ForbiddenException(UserStrings.CANNOT_DELETE_THIS_USER);
 		} else {
 			return true;
 		}

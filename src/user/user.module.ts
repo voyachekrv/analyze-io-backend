@@ -1,29 +1,18 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import { JwtModule, JwtModuleOptions } from '@nestjs/jwt';
-import { UserRepository } from './repositories/user.repository';
-import { AuthController } from './webapi/auth.controller';
 import { UserController } from './webapi/user.controller';
-import { AuthService } from './services/auth.service';
 import { UserService } from './services/user.service';
 import { UserMapper } from './mappers/user.mapper';
 import { PasswordService } from './services/password.service';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { User } from './entities/user.entity';
-
-/**
- * Конфигурация JWT-модуля
- * @param configService Сервис конфигурации
- * @returns Опции JWT-модуля
- */
-const jwtConfig = (configService: ConfigService): JwtModuleOptions => {
-	return {
-		secret: configService.get<string>('AIO_PRIVATE_KEY') || 'SECRET',
-		signOptions: {
-			expiresIn: '48h'
-		}
-	};
-};
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { PrismaService } from '../prisma.service';
+import { AuthController } from './webapi/auth.controller';
+import { JwtModule } from '@nestjs/jwt';
+import { AuthService } from './services/auth.service';
+import { jwtConfig } from '../jwt-config';
+import { MulterModule } from '@nestjs/platform-express';
+import { multerConfig } from '../multer-config';
+import { UserAvatarService } from './services/user-avatar.service';
+import { AvatarToolsModule } from '../avatar-tools/avatar-tools.module';
 
 /**
  * Модуль работы с пользователями
@@ -36,16 +25,22 @@ const jwtConfig = (configService: ConfigService): JwtModuleOptions => {
 			inject: [ConfigService],
 			useFactory: jwtConfig
 		}),
-		TypeOrmModule.forFeature([User])
+		MulterModule.registerAsync({
+			imports: [ConfigModule],
+			inject: [ConfigService],
+			useFactory: multerConfig
+		}),
+		AvatarToolsModule
 	],
-	controllers: [AuthController, UserController],
+	controllers: [UserController, AuthController],
 	providers: [
-		AuthService,
 		UserService,
 		UserMapper,
-		UserRepository,
-		PasswordService
+		PasswordService,
+		PrismaService,
+		AuthService,
+		UserAvatarService
 	],
-	exports: [JwtModule, UserRepository, UserMapper, UserService]
+	exports: [JwtModule, UserService, UserMapper]
 })
 export class UserModule {}

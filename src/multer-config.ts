@@ -3,6 +3,7 @@ import { MulterModuleOptions } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import * as path from 'path';
 import * as fs from 'fs';
+import { uuid } from 'uuidv4';
 
 /**
  * Конфигурация загрузчика файлов
@@ -27,7 +28,7 @@ export const multerConfig = (
 			cb(null, tmpStorage);
 		},
 		filename: (req, file, cb) => {
-			cb(null, file.originalname);
+			cb(null, `${uuid()}-${file.originalname}`);
 		}
 	})
 });

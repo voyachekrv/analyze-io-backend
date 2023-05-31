@@ -1,12 +1,12 @@
 import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
-import { TokenDto } from '../dto/token.dto';
-import { UserCreateDto } from '../dto/user.create.dto';
-import { UserSignInDto } from '../dto/user.sign-in.dto';
-import { User, UserRoles } from '../entities/user.entity';
-import { UserStrings } from '../user.strings';
-import { PasswordService } from './password.service';
 import { UserService } from './user.service';
+import { JwtService } from '@nestjs/jwt';
+import { PasswordService } from './password.service';
+import { UserSignInDto } from '../dto/user/user.sign-in.dto';
+import { TokenDto } from '../dto/token/token.dto';
+import { UserCreateDto } from '../dto/user/user.create.dto';
+import { User, UserRole } from '@prisma/client';
+import { UserStrings } from '../user.strings';
 
 /**
  * Сервис аутентификации пользователя
@@ -46,7 +46,8 @@ export class AuthService {
 	public async register(dto: UserCreateDto): Promise<TokenDto> {
 		const user = await this.userService.create(
 			dto,
-			UserRoles.DATA_SCIENCE_MANAGER
+			UserRole.DATA_SCIENCE_MANAGER,
+			undefined
 		);
 
 		Logger.log(

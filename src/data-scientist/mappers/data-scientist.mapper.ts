@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { UserMapper } from '../../user/mappers/user.mapper';
-import { SubordinatePatchResultDto } from '../dto/subordinate-patch-result.dto';
-import { User } from '../../user/entities/user.entity';
+import { SubordinateChangeManagerResultDto } from '../dto/subordinate-change-manager-result.dto';
+import { User } from '@prisma/client';
 import { ManagerChangeResult } from '../types/manager-change-result.type';
 
 /**
@@ -9,22 +9,30 @@ import { ManagerChangeResult } from '../types/manager-change-result.type';
  */
 @Injectable()
 export class DataScientistMapper {
+	/**
+	 * Маппер для подвида сущности Пользователь - аналитик
+	 * @param userMapper Маппер сущности Пользователь
+	 */
 	constructor(private readonly userMapper: UserMapper) {}
 
 	/**
 	 * Конвертация сущности в DTO результата смены менеджера
-	 * @param entity Сущность Пользователь
+	 * @param input Сущность Пользователь
+	 * @param manager Новый менеджер
 	 * @returns DTO результата операции смены менеджера
 	 */
-	public toPatchResultDto(input: User | User[]): ManagerChangeResult {
+	public toSubordinateChangeManagerResultDto(
+		input: User | User[],
+		manager: User
+	): ManagerChangeResult {
 		if (input['length']) {
-			const results: SubordinatePatchResultDto[] = [];
+			const results: SubordinateChangeManagerResultDto[] = [];
 
 			(input as User[]).forEach(entity => {
 				results.push(
-					new SubordinatePatchResultDto(
+					new SubordinateChangeManagerResultDto(
 						this.userMapper.toItemDto(entity),
-						this.userMapper.toItemDto(entity.manager)
+						this.userMapper.toItemDto(manager)
 					)
 				);
 			});
@@ -33,9 +41,9 @@ export class DataScientistMapper {
 		}
 		const singleEntity = input as User;
 
-		return new SubordinatePatchResultDto(
+		return new SubordinateChangeManagerResultDto(
 			this.userMapper.toItemDto(singleEntity),
-			this.userMapper.toItemDto(singleEntity.manager)
+			this.userMapper.toItemDto(manager)
 		);
 	}
 }

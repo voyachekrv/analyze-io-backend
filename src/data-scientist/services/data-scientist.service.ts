@@ -1,15 +1,13 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { UserItemDto } from '../../user/dto/user.item.dto';
-import { DataScientistQueriesRepository } from '../repositories/data-scientist-queries.repository';
-import { UserMapper } from '../../user/mappers/user.mapper';
-import { UserCardDto } from '../../user/dto/user.card.dto';
-import { UserCreateDto } from '../../user/dto/user.create.dto';
-import { User, UserRoles } from '../../user/entities/user.entity';
-import { SubordinatePatchDto } from '../dto/subordinate.patch.dto';
-import { DeleteDto } from '../../utils/delete.dto';
-import { ManagerChangeResult } from '../types/manager-change-result.type';
+import { PrismaService } from '../../prisma.service';
 import { DataScientistMapper } from '../mappers/data-scientist.mapper';
-import { DataSource } from 'typeorm';
+import { UserMapper } from '../../user/mappers/user.mapper';
+import { UserCreateDto } from '../../user/dto/user/user.create.dto';
+import { CreationResultDto } from '../../utils/creation-result.dto';
+import { User, UserRole } from '@prisma/client';
+import { DeleteDto } from '../../utils/delete.dto';
+import { SubordinateChangeManagerDto } from '../dto/subordinate-change-manager.dto';
+import { ManagerChangeResult } from '../types/manager-change-result.type';
 
 /**
  * Сервис для работы с аналитиками
@@ -18,54 +16,15 @@ import { DataSource } from 'typeorm';
 export class DataScientistService {
 	/**
 	 * Сервис для работы с аналитиками
-	 * @param dataScientistQueriesRepository Репозиторий для запросов к аналитикам
+	 * @param prisma Подключение к Prisma
+	 * @param dataScientistMapper Маппер сущности "Пользователь" подвида "Аналитик"
 	 * @param userMapper Маппер сущности "Пользователь"
 	 */
 	constructor(
-		private readonly dataScientistQueriesRepository: DataScientistQueriesRepository,
-		private readonly userMapper: UserMapper,
+		private readonly prisma: PrismaService,
 		private readonly dataScientistMapper: DataScientistMapper,
-		private readonly dataSource: DataSource
+		private readonly userMapper: UserMapper
 	) {}
-
-	/**
-	 * Получить всех аналитиков
-	 * @param managerId ID менеджера
-	 * @returns Список аналитиков
-	 */
-	public async findAll(managerId: number): Promise<UserItemDto[]> {
-		Logger.log(
-			`finding data scientists, managerID: ${managerId}`,
-			this.constructor.name
-		);
-
-		return (
-			await this.dataScientistQueriesRepository.findAll(managerId)
-		).map(entity => this.userMapper.toItemDto(entity));
-	}
-
-	/**
-	 * Получить аналитика по его ID
-	 * @param managerId ID менеджера
-	 * @param userId ID аналитика
-	 * @returns Аналитик
-	 */
-	public async findById(
-		managerId: number,
-		userId: number
-	): Promise<UserCardDto> {
-		Logger.log(
-			`finding data scientist by ID, ID: ${userId} managerID: ${managerId}`,
-			this.constructor.name
-		);
-
-		return this.userMapper.toCardDto(
-			await this.dataScientistQueriesRepository.findOneOr404(
-				managerId,
-				userId
-			)
-		);
-	}
 
 	/**
 	 * Создание нового аналитика
@@ -73,86 +32,68 @@ export class DataScientistService {
 	 * @param managerId ID менеджера
 	 * @returns Новый пользователь
 	 */
-	public async create(dto: UserCreateDto, managerId: number): Promise<User> {
+	public async create(
+		dto: UserCreateDto,
+		managerId: number
+	): Promise<CreationResultDto> {
 		Logger.log(
 			`creating user data-scientist, dto: ${dto.email}, ${dto.name}, managerID: ${managerId}`,
 			this.constructor.name
 		);
 
-		const manager =
-			await this.dataScientistQueriesRepository.findManagerOr404(
+		const dataScientist = await this.prisma.user.create({
+			data: this.userMapper.create(
+				dto,
+				UserRole.DATA_SCIENTIST,
 				managerId
-			);
+			)
+		});
 
-		return await this.dataScientistQueriesRepository.save(
-			this.userMapper.create(dto, UserRoles.DATA_SCIENTIST, manager)
-		);
+		return new CreationResultDto(dataScientist.id);
 	}
 
 	/**
 	 * Смена менеджера у аналитиков
 	 * @param managerId ID старого менеджера
 	 * @param dto Данные для смены менеджера
+	 * @returns Результат смены менеджера
 	 */
 	public async changeManager(
 		managerId: number,
-		dto: SubordinatePatchDto
+		dto: SubordinateChangeManagerDto
 	): Promise<ManagerChangeResult> {
 		Logger.log(
 			`change manager, old manager ID: ${managerId}, new manager ID: ${dto.managerId}, subordinates: ${dto.subordinates}`,
 			this.constructor.name
 		);
 
-		const patchCandidates =
-			await this.dataScientistQueriesRepository.findAllByIds(
-				managerId,
-				dto.subordinates
-			);
+		const patchCandidates = await this.filterAlienDataScientists(
+			managerId,
+			dto.subordinates
+		);
 
 		if (patchCandidates.length > 0) {
-			const newManager =
-				await this.dataScientistQueriesRepository.findManagerOr404(
-					dto.managerId
-				);
+			await this.fireFromAllShops(patchCandidates);
 
-			patchCandidates.forEach(candidate => {
-				candidate.manager = newManager;
+			await this.prisma.user.updateMany({
+				data: {
+					managerId: dto.managerId
+				},
+				where: {
+					AND: [
+						{ id: { in: dto.subordinates } },
+						{ role: UserRole.DATA_SCIENTIST }
+					]
+				}
 			});
 		}
 
-		const result = await this.dataScientistQueriesRepository.save(
-			patchCandidates
+		return this.dataScientistMapper.toSubordinateChangeManagerResultDto(
+			await this.prisma.user.findMany({
+				where: { id: { in: dto.subordinates } }
+			}),
+			await this.prisma.user.findUnique({ where: { id: dto.managerId } })
 		);
-
-		const queryRunner = await this.dataSource.createQueryRunner();
-		await queryRunner.startTransaction();
-
-		try {
-			await queryRunner.query(`
-				DELETE FROM usr.user_shops_shop WHERE "userId" IN (${dto.subordinates.join(
-					', '
-				)});
-			`);
-			await queryRunner.query(`
-				DELETE FROM commerce.shop_analytics_user WHERE "userId" IN (${dto.subordinates.join(
-					', '
-				)});
-			`);
-			await queryRunner.commitTransaction();
-		} catch (error) {
-			await queryRunner.rollbackTransaction();
-		} finally {
-			await queryRunner.release();
-		}
-
-		result.forEach(entity => {
-			Logger.log(
-				`manager changed, old manager ID: ${managerId}, new manager ID: ${entity.manager.id}, subordinate: ${entity.id}`,
-				this.constructor.name
-			);
-		});
-
-		return this.dataScientistMapper.toPatchResultDto(result);
 	}
 
 	/**
@@ -168,9 +109,58 @@ export class DataScientistService {
 			this.constructor.name
 		);
 
-		await this.dataScientistQueriesRepository.deleteByIds(
-			managerId,
-			dto.ids
-		);
+		await this.prisma.user.deleteMany({
+			where: {
+				AND: [
+					{ id: { in: dto.ids } },
+					{ managerId },
+					{ role: UserRole.DATA_SCIENTIST }
+				]
+			}
+		});
+	}
+
+	/**
+	 * Получить список аналитиков, в подчинении у заданного менеджера
+	 * @param managerId ID менеджера
+	 * @param dataScientistsIds ID аналитиков
+	 * @returns Список аналитиков
+	 */
+	private async getDataScientisisByIds(
+		managerId: number,
+		dataScientistsIds: number[]
+	): Promise<User[]> {
+		return await this.prisma.user.findMany({
+			where: {
+				AND: [{ id: { in: dataScientistsIds } }, { managerId }]
+			}
+		});
+	}
+
+	/**
+	 * Уволить аналитиков со всех магазинов, на которых они работают
+	 * @param dataScientistsIds ID аналитиков
+	 */
+	private async fireFromAllShops(dataScientistsIds: number[]): Promise<void> {
+		await this.prisma.analystsOnShop.deleteMany({
+			where: {
+				AND: [{ analystId: { in: dataScientistsIds } }]
+			}
+		});
+	}
+
+	/**
+	 * Поиск ID аналитиков по заданным ID менеджера и ID аналитиков
+	 * @param managerId ID менеджера
+	 * @param dataScientistsIds ID аналитиков
+	 * @returns Список ID аналитиков
+	 */
+	private async filterAlienDataScientists(
+		managerId: number,
+		dataScientistsIds: number[]
+	): Promise<number[]> {
+		return (
+			await this.getDataScientisisByIds(managerId, dataScientistsIds)
+		).map(e => e.id);
 	}
 }

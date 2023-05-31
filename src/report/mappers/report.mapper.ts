@@ -1,14 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { ShopMapper } from '../../commerce/mappers/shop.mapper';
+import { Prisma, Report, Shop, User } from '@prisma/client';
+import { ShopMapper } from '../../shop/mappers/shop.mapper';
 import { UserMapper } from '../../user/mappers/user.mapper';
-import { ReportItemDto } from '../dto/report.item.dto';
-import { Report } from '../entities/report.entity';
 import { ReportCardDto } from '../dto/report.card.dto';
-import { ReportUpdateDto } from '../dto/report.update.dto';
 import { ReportCreateDto } from '../dto/report.create.dto';
-import { Shop } from '../../commerce/entities/shop.entity';
-import { User } from '../../user/entities/user.entity';
-import { ReportRepository } from '../repositories/report.repository';
+import { ReportItemDto } from '../dto/report.item.dto';
+import { ReportUpdateDto } from '../dto/report.update.dto';
 
 /**
  * Маппер для сущности Отчет
@@ -23,8 +20,7 @@ export class ReportMapper {
 	 */
 	constructor(
 		private readonly shopMapper: ShopMapper,
-		private readonly userMapper: UserMapper,
-		private readonly reportRepository: ReportRepository
+		private readonly userMapper: UserMapper
 	) {}
 
 	/**
@@ -44,9 +40,11 @@ export class ReportMapper {
 	/**
 	 * Конвертация сущности в DTO карточки
 	 * @param entity Сущность Отчет
+	 * @param creator  Создатель отчета
+	 * @param shop Магазин, по которому был сделан отчет
 	 * @returns DTO карточки
 	 */
-	public toCardDto(entity: Report): ReportCardDto {
+	public toCardDto(entity: Report, creator: User, shop: Shop): ReportCardDto {
 		return new ReportCardDto({
 			id: entity.id,
 			createdAt: entity.createdAt,
@@ -54,8 +52,8 @@ export class ReportMapper {
 			file: entity.file,
 			comment: entity.comment,
 			seenByManager: entity.seenByManager,
-			dataScientist: this.userMapper.toItemDto(entity.dataScientist),
-			shop: this.shopMapper.toItemDto(entity.shop)
+			dataScientist: this.userMapper.toItemDto(creator),
+			shop: this.shopMapper.toItemDto(shop)
 		});
 	}
 
@@ -79,35 +77,35 @@ export class ReportMapper {
 	public create(
 		dto: ReportCreateDto,
 		pathToFile: string,
-		dataScientist: User,
-		shop: Shop
-	): Report {
-		return new Report(
-			dto.name,
-			pathToFile,
-			dto.comment,
-			dataScientist,
-			shop
-		);
+		dataScientistId: number,
+		shopId: number
+	): Prisma.ReportCreateInput {
+		return {
+			name: dto.name,
+			file: pathToFile,
+			comment: dto.comment,
+			creator: {
+				connect: {
+					id: dataScientistId
+				}
+			},
+			shop: {
+				connect: {
+					id: shopId
+				}
+			}
+		};
 	}
 
 	/**
 	 * Обновление Отчета
 	 * @param dto DTO обновления
-	 * @param shopId ID магазина
-	 * @param id ID отчета
 	 * @returns Обновленная сущность Отчет
 	 */
-	public async update(
-		dto: ReportUpdateDto,
-		shopId: number,
-		id: number
-	): Promise<Report> {
-		const entity = await this.reportRepository.findById(shopId, id);
-
-		entity.name = dto.name;
-		entity.comment = dto.comment;
-
-		return entity;
+	public update(dto: ReportUpdateDto): unknown {
+		return {
+			name: dto.name,
+			comment: dto.comment
+		};
 	}
 }

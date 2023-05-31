@@ -1,38 +1,27 @@
-import { Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
-import { NestExpressApplication } from '@nestjs/platform-express';
 import { AppModule } from './app.module';
-import { Prefixes } from './prefixes';
-import * as fs from 'fs';
+import { NestExpressApplication } from '@nestjs/platform-express';
+import { ConfigService } from '@nestjs/config';
+import { UrlPrefixes } from './url-prefixes.enum';
+import { SwaggerModule } from '@nestjs/swagger';
+import { createSwaggerDocument, mkResourcesDir } from './utils/init-tools';
+import { Logger } from '@nestjs/common';
+import { PrismaService } from './prisma.service';
 import * as path from 'path';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { runMigrationIfNotExists } from './utils/run-migration';
+import * as express from 'express';
 
 let appPort: number;
 
-const bootstrap = async () => {
-	await runMigrationIfNotExists();
-
+/**
+ * Входная точка приложения
+ */
+const bootstrap = async (): Promise<void> => {
 	const app = await NestFactory.create<NestExpressApplication>(AppModule, {
 		cors: true
 	});
 	const configService = app.get(ConfigService);
 
-	app.setGlobalPrefix(Prefixes.GLOBAL);
-
-	const config = new DocumentBuilder()
-		.setTitle('Analyze.io - Application Service')
-		.setDescription(
-			`
-			Бэкенд системы анализа поведения пользователя интернет-магазина Analyze.io
-			`
-		)
-		.setVersion(process.env.npm_package_version)
-		.addBearerAuth({ in: 'header', type: 'http', bearerFormat: 'JWT' })
-		.build();
-	const document = SwaggerModule.createDocument(app, config);
-	SwaggerModule.setup(Prefixes.DOCS, app, document);
+	app.setGlobalPrefix(UrlPrefixes.GLOBAL);
 
 	app.use((req, res, next) => {
 		res.setHeader('Access-Control-Allow-Origin', '*');
@@ -41,14 +30,14 @@ const bootstrap = async () => {
 		next();
 	});
 
-	const resourcesDir = path.join(
-		process.cwd(),
-		configService.get<string>('AIO_FILE_STORAGE')
-	);
+	const prismaService = app.get(PrismaService);
+	await prismaService.enableShutdownHooks(app);
 
-	if (!fs.existsSync(resourcesDir)) {
-		fs.mkdirSync(resourcesDir);
-	}
+	app.use(express.static(path.join(process.cwd(), 'resources')));
+
+	SwaggerModule.setup(UrlPrefixes.DOCS, app, createSwaggerDocument(app));
+
+	mkResourcesDir(configService.get<string>('AIO_FILE_STORAGE'));
 
 	appPort = configService.get<number>('AIO_PORT');
 
@@ -56,9 +45,12 @@ const bootstrap = async () => {
 };
 
 bootstrap().then(() => {
-	Logger.log(`Application started on port ${appPort}`, 'main');
 	Logger.log(
-		`API Documentation: http://localhost:${process.env.AIO_PORT}/${Prefixes.DOCS}`,
+		`🚀 Application successfully started on port ${appPort}`,
+		'main'
+	);
+	Logger.log(
+		`API Documentation: http://localhost:${process.env.AIO_PORT}/${UrlPrefixes.DOCS}`,
 		'main'
 	);
 });

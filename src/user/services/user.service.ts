@@ -1,14 +1,16 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { DeleteDto } from '../../utils/delete.dto';
-import { Page } from '../../utils/page';
-import { UserCardDto } from '../dto/user.card.dto';
-import { UserCreateDto } from '../dto/user.create.dto';
-import { UserItemDto } from '../dto/user.item.dto';
-import { UserRolesDto } from '../dto/user.roles.dto';
-import { UserUpdateDto } from '../dto/user.update.dto';
-import { UserRoles, User } from '../entities/user.entity';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { UserMapper } from '../mappers/user.mapper';
-import { UserRepository } from '../repositories/user.repository';
+import { UserRolesDto } from '../dto/user/user.roles.dto';
+import { User, UserRole } from '@prisma/client';
+import { UserItemDto } from '../dto/user/user.item.dto';
+import { UserCardDto } from '../dto/user/user.card.dto';
+import { PrismaService } from '../../prisma.service';
+import { UserUpdateDto } from '../dto/user/user.update.dto';
+import { UserCreateDto } from '../dto/user/user.create.dto';
+import { DeleteDto } from '../../utils/delete.dto';
+import { UserFindManyParams } from '../user.search-mapping';
+import { format } from 'util';
+import { UserStrings } from '../user.strings';
 
 /**
  * Сервис для работы с пользователями
@@ -17,11 +19,11 @@ import { UserRepository } from '../repositories/user.repository';
 export class UserService {
 	/**
 	 * Сервис для работы с пользователями
-	 * @param userRepository Репозиторий сущности "Пользователь"
+	 * @param prisma Подключение к Prisma
 	 * @param userMapper Маппер сущности "Пользователь"
 	 */
 	constructor(
-		private readonly userRepository: UserRepository,
+		private readonly prisma: PrismaService,
 		private readonly userMapper: UserMapper
 	) {}
 
@@ -31,20 +33,20 @@ export class UserService {
 	 */
 	public getRoles(): UserRolesDto {
 		Logger.log('getting roles', this.constructor.name);
-		return new UserRolesDto(Object.values(UserRoles));
+		return new UserRolesDto(Object.values(UserRole));
 	}
 
 	/**
 	 * Поиск всех пользователей
-	 * @param page Номер страницы
+	 * @param params Параметры поиска (take, skip, where, orderBy)
 	 * @returns Список экземпляров DTO списка
 	 */
-	public async findAll(page: number): Promise<Page<UserItemDto>> {
-		Logger.log(`finding all users, page: ${page}`, this.constructor.name);
+	public async findAll(params: UserFindManyParams): Promise<UserItemDto[]> {
+		Logger.log('finding all users', this.constructor.name);
 
-		return (await this.userRepository.findAll(page)).map(
+		return (await this.prisma.user.findMany({ ...params })).map(
 			this.userMapper.toItemDto
-		) as Page<UserItemDto>;
+		);
 	}
 
 	/**
@@ -55,9 +57,50 @@ export class UserService {
 	public async findById(id: number): Promise<UserCardDto> {
 		Logger.log(`finding user by id, id: ${id}`, this.constructor.name);
 
-		return this.userMapper.toCardDto(
-			await this.userRepository.findOneOr404(id)
+		try {
+			const entity = await this.prisma.user.findUniqueOrThrow({
+				where: { id },
+				include: { manager: true }
+			});
+
+			return this.userMapper.toCardDto(entity, entity.manager);
+		} catch (e) {
+			throw new NotFoundException(
+				format(
+					UserStrings.NOT_FOUND_SMTH,
+					UserStrings.USER_NOMINATIVE,
+					id
+				)
+			);
+		}
+	}
+
+	/**
+	 * Поиск сущности пользователя по ID
+	 * @param id ID пользователя
+	 * @returns Сущность пользователя
+	 */
+	public async findEntityById(id: number): Promise<User> {
+		Logger.log(
+			`finding user entity by id, id: ${id}`,
+			this.constructor.name
 		);
+
+		try {
+			const entity = await this.prisma.user.findUniqueOrThrow({
+				where: { id }
+			});
+
+			return entity;
+		} catch (e) {
+			throw new NotFoundException(
+				format(
+					UserStrings.NOT_FOUND_SMTH,
+					UserStrings.USER_NOMINATIVE,
+					id
+				)
+			);
+		}
 	}
 
 	/**
@@ -71,9 +114,21 @@ export class UserService {
 			this.constructor.name
 		);
 
-		return this.userMapper.toUpdateDto(
-			await this.userRepository.findOneOr404(id)
-		);
+		try {
+			return this.userMapper.toUpdateDto(
+				await this.prisma.user.findUniqueOrThrow({
+					where: { id }
+				})
+			);
+		} catch (e) {
+			throw new NotFoundException(
+				format(
+					UserStrings.NOT_FOUND_SMTH,
+					UserStrings.USER_NOMINATIVE,
+					id
+				)
+			);
+		}
 	}
 
 	/**
@@ -87,24 +142,24 @@ export class UserService {
 			this.constructor.name
 		);
 
-		return await this.userRepository.findByEmail(email);
+		return await this.prisma.user.findUnique({ where: { email } });
 	}
 
 	/**
 	 * Создание пользователя
 	 * @param dto DTO создания пользователя
 	 * @param role Роль пользователя
+	 * @param managerId ID менеджера
 	 * @returns Созаднный пользователь
 	 */
-	public async create(dto: UserCreateDto, role: UserRoles): Promise<User> {
-		Logger.log(
-			`create user, email: ${dto.email}, name: ${dto.name}, role: ${role}`,
-			this.constructor.name
-		);
-
-		return await this.userRepository.save(
-			this.userMapper.create(dto, role, null)
-		);
+	public async create(
+		dto: UserCreateDto,
+		role: UserRole,
+		managerId?: number
+	): Promise<User> {
+		return await this.prisma.user.create({
+			data: this.userMapper.create(dto, role, managerId)
+		});
 	}
 
 	/**
@@ -122,11 +177,24 @@ export class UserService {
 			this.constructor.name
 		);
 
-		return this.userMapper.toUpdateDto(
-			await this.userRepository.save(
-				await this.userMapper.update(dto, id)
-			)
-		);
+		try {
+			return this.userMapper.toUpdateDto(
+				await this.prisma.user.update({
+					where: { id },
+					data: this.userMapper.update(dto)
+				})
+			);
+		} catch (e) {
+			console.log(e);
+
+			throw new NotFoundException(
+				format(
+					UserStrings.NOT_FOUND_SMTH,
+					UserStrings.USER_NOMINATIVE,
+					id
+				)
+			);
+		}
 	}
 
 	/**
@@ -137,7 +205,19 @@ export class UserService {
 	public async checkManager(id: number): Promise<boolean> {
 		Logger.log(`manager checking ID: ${id}`, this.constructor.name);
 
-		return await this.userRepository.isManager(id);
+		try {
+			const entity = await this.prisma.user.findUniqueOrThrow({
+				where: { id }
+			});
+
+			if (entity.role === UserRole.DATA_SCIENCE_MANAGER) {
+				return true;
+			}
+
+			return false;
+		} catch (e) {
+			return false;
+		}
 	}
 
 	/**
@@ -150,6 +230,10 @@ export class UserService {
 			this.constructor.name
 		);
 
-		await this.userRepository.deleteByIds(dto.ids);
+		await this.prisma.user.deleteMany({
+			where: {
+				id: { in: dto.ids }
+			}
+		});
 	}
 }

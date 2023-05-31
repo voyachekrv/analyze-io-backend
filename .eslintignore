@@ -1,8 +1,2 @@
-/resources/*
-/resources-test/*
-/pgadmin
-/pgadmin/*
-/pgadmin/sessions/*
-/pgdata
-/pgdata/*
-/pgdata/**/*
+volumes/
+resources/

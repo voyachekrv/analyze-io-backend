@@ -1,17 +1,23 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import * as CryptoJS from 'crypto-js';
+import { CryptoUtils } from '../../utils/crypto-utils';
 
 /**
  * Сервис для работы с паролем пользователя
  */
 @Injectable()
 export class PasswordService {
+	private cryptoUtils: CryptoUtils;
+
 	/**
 	 * Сервис для работы с паролем пользователя
 	 * @param configService Сервис работы с конфигурационными файлами
 	 */
-	constructor(private readonly configService: ConfigService) {}
+	constructor(private readonly configService: ConfigService) {
+		this.cryptoUtils = new CryptoUtils(
+			this.configService.get<string>('AIO_PRIVATE_KEY')
+		);
+	}
 
 	/**
 	 * Шифрование пароля
@@ -19,10 +25,7 @@ export class PasswordService {
 	 * @returns Зашифрованный пароль
 	 */
 	public encrypt(password: string): string {
-		return CryptoJS.AES.encrypt(
-			password,
-			this.configService.get<string>('AIO_PRIVATE_KEY')
-		).toString();
+		return this.cryptoUtils.encrypt(password);
 	}
 
 	/**
@@ -31,11 +34,6 @@ export class PasswordService {
 	 * @returns Расшифрованный пароль
 	 */
 	public decrypt(encryptedPassword: string): string {
-		const bytes = CryptoJS.AES.decrypt(
-			encryptedPassword,
-			this.configService.get<string>('AIO_PRIVATE_KEY')
-		);
-
-		return bytes.toString(CryptoJS.enc.Utf8);
+		return this.cryptoUtils.decrypt(encryptedPassword);
 	}
 }
