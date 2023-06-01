@@ -1,7 +1,9 @@
 # compiled output
 /dist
 /node_modules
-/volumes
+/volumes/pgadmin
+/volumes/pgdata
+/volumes/resources
 /resources
 /resources-test
 

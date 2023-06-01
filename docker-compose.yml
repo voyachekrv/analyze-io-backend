@@ -30,19 +30,34 @@ services:
     networks:
       - postgres
 
-  #analyze-io-backend:
-  #  container_name: analyze-io-backend
-  #  image: analyze-io-backend
-  #  depends_on:
-  #    - postgres
-  #  env_file:
-  #    - .env
-  #  ports:
-  #    - '8000:${AIO_PORT}'
-  #  volumes:
-  #    - ${AIO_RESOURCES_VOLUME}:/app/${AIO_FILE_STORAGE}
-  #  networks:
-  #    - postgres     
+  nginx:
+    container_name: analyze-io-nginx
+    image: nginx:latest
+    depends_on:
+      - analyze-io-backend
+    volumes:
+      - ./volumes/nginx/sites-available:/etc/nginx/sites-available
+    ports:
+      - '80:80'
+    restart: unless-stopped
+    networks:
+      - postgres
+
+  analyze-io-backend:
+    container_name: analyze-io-backend
+    image: analyze-io-backend
+    depends_on:
+      - postgres
+    env_file:
+      - .env
+    ports:
+      - '8000:${AIO_PORT}'
+    expose:
+      - '${AIO_PORT}'  
+    volumes:
+      - ${AIO_RESOURCES_VOLUME}:/app/${AIO_FILE_STORAGE}
+    networks:
+      - postgres
 
 networks:
   postgres:
