@@ -1,3 +1,4 @@
+import { HealthCheckModule } from './healthcheck/healthcheck.module';
 import { MonitorScriptModule } from './monitor-script/monitor-script.module';
 import { ReportModule } from './report/report.module';
 import { DataScientistModule } from './data-scientist/data-scientist.module';
@@ -20,7 +21,8 @@ import { ConfigModule } from '@nestjs/config';
 		UserModule,
 		ShopModule,
 		ReportModule,
-		MonitorScriptModule
+		MonitorScriptModule,
+		HealthCheckModule
 	]
 })
 export class AppModule {}

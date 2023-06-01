@@ -9,6 +9,9 @@ import { Logger } from '@nestjs/common';
 import { PrismaService } from './prisma.service';
 import * as path from 'path';
 import * as express from 'express';
+import { DatabaseHealthCheckService } from './healthcheck/database-healthcheck.service';
+import { normalizeBoolean } from './utils/normalize-boolean';
+import { runPrismaMigrations } from './utils/run-prisma-migrations';
 
 let appPort: number;
 
@@ -23,25 +26,55 @@ const bootstrap = async (): Promise<void> => {
 
 	app.setGlobalPrefix(UrlPrefixes.GLOBAL);
 
-	app.use((req, res, next) => {
+	app.use((_, res, next) => {
 		res.setHeader('Access-Control-Allow-Origin', '*');
 		res.setHeader('Access-Control-Allow-Headers', '*');
 		res.header('Access-Control-Allow-Credentials', true);
 		next();
 	});
 
-	const prismaService = app.get(PrismaService);
-	await prismaService.enableShutdownHooks(app);
+	const healthCheckService = app.get(DatabaseHealthCheckService);
 
-	app.use(express.static(path.join(process.cwd(), 'resources')));
+	const skipMigrations = normalizeBoolean(
+		configService.get<boolean>('AIO_SKIP_DB_MIGRATION')
+	);
 
-	SwaggerModule.setup(UrlPrefixes.DOCS, app, createSwaggerDocument(app));
+	let canContinueInit = false;
 
-	mkResourcesDir(configService.get<string>('AIO_FILE_STORAGE'));
+	while (true) {
+		const dbState = await healthCheckService.getDatabaseState();
 
-	appPort = configService.get<number>('AIO_PORT');
+		if (dbState) {
+			Logger.log('Successfully connected to database', 'main');
+			canContinueInit = true;
+			break;
+		}
 
-	await app.listen(appPort);
+		Logger.log('Connecting to database...', 'main');
+	}
+
+	if (canContinueInit) {
+		if (!skipMigrations) {
+			Logger.log('Database migrations are not skipped', 'main');
+
+			await runPrismaMigrations();
+		} else {
+			Logger.log('Database migrations skipped', 'main');
+		}
+
+		const prismaService = app.get(PrismaService);
+		await prismaService.enableShutdownHooks(app);
+
+		app.use(express.static(path.join(process.cwd(), 'resources')));
+
+		SwaggerModule.setup(UrlPrefixes.DOCS, app, createSwaggerDocument(app));
+
+		mkResourcesDir(configService.get<string>('AIO_FILE_STORAGE'));
+
+		appPort = configService.get<number>('AIO_PORT');
+
+		await app.listen(appPort);
+	}
 };
 
 bootstrap().then(() => {

@@ -8,7 +8,7 @@ export const normalizeBoolean = (str: string | boolean): boolean => {
 		return false;
 	}
 
-	let enhancedString;
+	let enhancedString: string | boolean;
 
 	if (typeof str === 'string') {
 		enhancedString = str.toLowerCase().trim();
