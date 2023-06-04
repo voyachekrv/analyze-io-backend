@@ -27,6 +27,4 @@ export class DatabaseHealthCheckService {
 			return false;
 		}
 	}
-
-	public async;
 }
