@@ -1,11 +1,10 @@
 # compiled output
 /dist
 /node_modules
-/volumes/pgadmin
-/volumes/pgdata
-/volumes/resources
+/volumes
 /resources
 /resources-test
+/monitor
 
 # Logs
 logs
