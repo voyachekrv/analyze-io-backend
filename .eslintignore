@@ -1,2 +1,3 @@
 volumes/
 resources/
+nginx-sample-config.conf
