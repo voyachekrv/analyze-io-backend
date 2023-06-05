@@ -9,11 +9,12 @@
 		"build": "nest build",
 		"format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
 		"start": "nest start",
-		"start:dev": "dotenv -e .env.test -- nest start --watch",
+		"start:dev": "nest start --watch",
 		"start:debug": "nest start --debug --watch",
 		"start:prod": "node dist/src/main",
 		"lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
-		"test:e2e": "dotenv -e .env.test -- npx prisma migrate dev && jest --config ./test/jest-e2e.json"
+		"test:e2e": "dotenv -e .env.test -- npx prisma migrate dev && jest --config ./test/jest-e2e.json",
+		"prisma:migrate": "prisma migrate dev"
 	},
 	"dependencies": {
 		"@nestjs/axios": "^2.0.0",
@@ -23,6 +24,7 @@
 		"@nestjs/jwt": "^10.0.3",
 		"@nestjs/platform-express": "^9.0.0",
 		"@nestjs/swagger": "^6.3.0",
+		"@nestjs/terminus": "^9.2.2",
 		"@prisma/client": "^4.14.1",
 		"axios": "^1.4.0",
 		"class-transformer": "^0.5.1",
