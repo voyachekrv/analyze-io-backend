@@ -8,3 +8,4 @@ volumes
 resources
 resources-test
 *.code-workspace
+nginx-sample-config.conf
