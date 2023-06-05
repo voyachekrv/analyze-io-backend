@@ -4,6 +4,7 @@
 /volumes
 /resources
 /resources-test
+/monitor
 
 # Logs
 logs
